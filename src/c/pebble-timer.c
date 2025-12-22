@@ -171,9 +171,9 @@ static void update_display(void) {
       break;
       
     case STATE_RUNNING:
-      snprintf(title_buf, sizeof(title_buf), "Timer Running");
+      title_buf[0] = '\0';
       format_time_adaptive(s_remaining_seconds, time_buf, sizeof(time_buf));
-      snprintf(hint_buf, sizeof(hint_buf), "SELECT: Pause");
+      hint_buf[0] = '\0';
       
       // Color based on remaining time
       if (s_remaining_seconds <= 10) {
