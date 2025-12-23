@@ -60,6 +60,9 @@ typedef struct {
     int selected_preset;
     int custom_hours;
     int custom_minutes;
+    
+    // Display options
+    bool hide_time_text;  // Hide m:ss overlay on visualizations
 } TimerContext;
 
 // =============================================================================
@@ -131,6 +134,9 @@ TimerEffects timer_dismiss_completion(TimerContext *ctx);
 // Cycle to next display mode
 TimerEffects timer_cycle_display_mode(TimerContext *ctx);
 
+// Toggle hide time text setting
+TimerEffects timer_toggle_hide_time_text(TimerContext *ctx);
+
 // =============================================================================
 // Input Handling - Button Press Actions
 // =============================================================================
@@ -149,4 +155,7 @@ TimerEffects timer_handle_down(TimerContext *ctx);
 
 // Handle BACK button press
 TimerEffects timer_handle_back(TimerContext *ctx);
+
+// Handle UP long press
+TimerEffects timer_handle_up_long(TimerContext *ctx);
 

@@ -9,7 +9,8 @@ DisplayContext display_context_from_timer(const TimerContext *timer) {
         .remaining_seconds = timer->remaining_seconds,
         .total_seconds = timer->total_seconds,
         .state = timer->state,
-        .display_mode = timer->display_mode
+        .display_mode = timer->display_mode,
+        .hide_time_text = timer->hide_time_text
     };
     return dctx;
 }
@@ -116,9 +117,11 @@ void display_draw_blocks(GContext *ctx, GRect bounds, const DisplayContext *dctx
         }
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
 }
 
 // =============================================================================
@@ -163,9 +166,11 @@ void display_draw_vertical_blocks(GContext *ctx, GRect bounds, const DisplayCont
         }
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
 }
 
 // =============================================================================
@@ -247,9 +252,11 @@ void display_draw_clock(GContext *ctx, GRect bounds, const DisplayContext *dctx)
         graphics_draw_line(ctx, center, hand_end);
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-    GRect text_rect = GRect(center_x - 40, center_y + radius + 5, 80, 24);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+        GRect text_rect = GRect(center_x - 40, center_y + radius + 5, 80, 24);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
 }
 
 // =============================================================================
@@ -282,9 +289,11 @@ void display_draw_ring(GContext *ctx, GRect bounds, const DisplayContext *dctx) 
         }
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
-    GRect text_rect = GRect(0, center_y - 20, bounds.size.w, 44);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
+        GRect text_rect = GRect(0, center_y - 20, bounds.size.w, 44);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
 }
 
 // =============================================================================
@@ -368,9 +377,11 @@ void display_draw_hourglass(GContext *ctx, GRect bounds, const DisplayContext *d
         graphics_fill_circle(ctx, GPoint(center_x, fall_y), 2);
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    GRect text_rect = GRect(0, bottom + 5, bounds.size.w, 30);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, bottom + 5, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
 }
 
 // =============================================================================
@@ -453,9 +464,11 @@ void display_draw_binary(GContext *ctx, GRect bounds, const DisplayContext *dctx
                            GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    GRect text_rect = GRect(0, bounds.size.h - 40, bounds.size.w, 30);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, bounds.size.h - 40, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
 }
 
 // =============================================================================
@@ -523,9 +536,11 @@ void display_draw_radial(GContext *ctx, GRect bounds, const DisplayContext *dctx
         }
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    GRect text_rect = GRect(0, center_y - 14, bounds.size.w, 30);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, center_y - 14, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
     
     // Legend
     GFont tiny = fonts_get_system_font(FONT_KEY_GOTHIC_14);
@@ -733,9 +748,11 @@ void display_draw_water_level(GContext *ctx, GRect bounds, const DisplayContext 
                                GPoint(container_left, mark_y));
     }
     
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    GRect text_rect = GRect(0, container_bottom + 10, bounds.size.w, 30);
-    draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, container_bottom + 10, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
 }
 
 // =============================================================================

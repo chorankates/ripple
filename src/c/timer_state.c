@@ -12,6 +12,7 @@ void timer_context_init(TimerContext *ctx) {
     ctx->selected_preset = 0;
     ctx->custom_hours = 0;
     ctx->custom_minutes = 5;
+    ctx->hide_time_text = false;
 }
 
 TimerEffects timer_effects_none(void) {
@@ -171,6 +172,17 @@ TimerEffects timer_cycle_display_mode(TimerContext *ctx) {
     return effects;
 }
 
+TimerEffects timer_toggle_hide_time_text(TimerContext *ctx) {
+    TimerEffects effects = timer_effects_none();
+    
+    ctx->hide_time_text = !ctx->hide_time_text;
+    
+    effects.vibrate_short = true;
+    effects.update_display = true;
+    
+    return effects;
+}
+
 // =============================================================================
 // Input Handling - SELECT Button
 // =============================================================================
@@ -224,6 +236,15 @@ TimerEffects timer_handle_select_long(TimerContext *ctx) {
         ctx->state == STATE_RUNNING ||
         ctx->state == STATE_PAUSED) {
         return timer_cycle_display_mode(ctx);
+    }
+    
+    return timer_effects_none();
+}
+
+TimerEffects timer_handle_up_long(TimerContext *ctx) {
+    // Toggle hide time text in running/paused states
+    if (ctx->state == STATE_RUNNING || ctx->state == STATE_PAUSED) {
+        return timer_toggle_hide_time_text(ctx);
     }
     
     return timer_effects_none();
