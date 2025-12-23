@@ -846,7 +846,6 @@ void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *
 // =============================================================================
 
 void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
-    int center_x = bounds.size.w / 2;
     int center_y = bounds.size.h / 2;
     
     // Calculate elapsed percentage
@@ -906,7 +905,6 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
 // =============================================================================
 
 void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
-    int center_x = bounds.size.w / 2;
     int center_y = bounds.size.h / 2;
     
     // Calculate remaining percentage
