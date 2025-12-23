@@ -142,21 +142,41 @@ emulator-kill:
 # 5. Wait for animation to settle
 # 6. Take screenshot
 #
+# Requires: xdotool (sudo apt install xdotool)
+#
+# Key mappings in QEMU emulator:
+#   Up arrow    = Up button
+#   Down arrow  = Down button
+#   Return      = Select button
+#   BackSpace   = Back button
+#
 # Usage:
 #   make screenshot-mode MODE=blocks PLATFORM=basalt
 #   make screenshot-all-modes PLATFORM=basalt
-#
-# Note: Long-press is simulated by holding the button for 600ms
 # =============================================================================
 
-# Helper: send long press (hold for 600ms)
-define long_press_select
-	pebble emu-press --emulator $(PLATFORM) select --hold 600
+# Emulator window name pattern for xdotool
+EMU_WINDOW = qemu
+
+# Long press duration in seconds
+LONG_PRESS_DURATION = 0.6
+
+# Helper function to find and focus emulator window
+define focus_emulator
+	@xdotool search --name "$(EMU_WINDOW)" windowactivate --sync 2>/dev/null || \
+		(echo "ERROR: Could not find emulator window. Is it running?" && exit 1)
 endef
 
 # Helper: send short press
-define press_select
-	pebble emu-press --emulator $(PLATFORM) select
+define press_key
+	xdotool search --name "$(EMU_WINDOW)" windowactivate --sync key $(1)
+endef
+
+# Helper: send long press (key down, wait, key up)
+define long_press_key
+	xdotool search --name "$(EMU_WINDOW)" windowactivate --sync keydown $(1) && \
+	sleep $(LONG_PRESS_DURATION) && \
+	xdotool search --name "$(EMU_WINDOW)" windowactivate keyup $(1)
 endef
 
 # Screenshot a specific mode
@@ -177,12 +197,12 @@ screenshot-mode: build
 	done; \
 	echo "Cycling to mode index $$mode_idx ($(MODE))..."; \
 	i=0; while [ $$i -lt $$mode_idx ]; do \
-		pebble emu-press --emulator $(PLATFORM) select --hold 600; \
+		$(call long_press_key,Return); \
 		sleep $(BUTTON_DELAY); \
 		i=$$((i + 1)); \
 	done
 	@echo "Starting timer..."
-	@pebble emu-press --emulator $(PLATFORM) select
+	@$(call press_key,Return)
 	@echo "Waiting $(SETTLE_DELAY)s for animation to settle..."
 	@sleep $(SETTLE_DELAY)
 	@echo "Taking screenshot..."
