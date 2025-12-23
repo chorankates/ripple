@@ -66,12 +66,6 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 | DOWN | Cancel timer and return to presets |
 | BACK | Show exit confirmation |
 
-### Timer Complete
-
-| Button | Action |
-|--------|--------|
-| Any button | Dismiss and return to preset selection |
-
 ## Color Themes
 
 On color Pebble models (Basalt, Chalk, Emery), the app uses distinct colors:
@@ -81,25 +75,21 @@ On color Pebble models (Basalt, Chalk, Emery), the app uses distinct colors:
 - Low time warning (under 10 seconds): Red text
 - Completed: Bright green text
 
-On black and white models (Aplite, Diorite), all elements display in white on black.
+## development
 
-## Building
-
-Requires the Pebble SDK.
+Requires the [Pebble SDK](https://developer.rebble.io/sdk/).
 
 ```bash
-pebble build
+make build
 ```
 
-## Installing
 
 ```bash
-pebble install --phone <IP_ADDRESS>
+make install-ip IP=<IP_ADDRESS>
+
 ```
 
-```bach
-pebble install --cloudpebble
+```bash
+make install-cloudpebble
 ```
-
-Or install the generated `.pbw` file from the `build` directory.
 

@@ -67,21 +67,6 @@ lint:
 	@echo "Checking code style..."
 	@find src/c -name "*.c" -o -name "*.h" | xargs -I {} sh -c 'echo "Checking {}"; gcc -fsyntax-only -Wall -Wextra {} 2>&1 || true'
 
-# Count lines of code
-loc:
-	@echo "Lines of code:"
-	@echo "  Source:"
-	@find src/c -name "*.c" -o -name "*.h" | xargs wc -l | tail -1
-	@echo "  Tests:"
-	@find tests -name "*.c" -o -name "*.h" | xargs wc -l | tail -1
-
-# Show file structure
-tree:
-	@find src tests -type f \( -name "*.c" -o -name "*.h" \) | sort
-
-# =============================================================================
-# Help
-# =============================================================================
 
 help:
 	@echo "Pebble Timer Makefile"
@@ -101,11 +86,3 @@ help:
 	@echo ""
 	@echo "Development targets:"
 	@echo "  make lint                - Check code for warnings"
-	@echo "  make loc                 - Count lines of code"
-	@echo "  make tree                - Show source file structure"
-	@echo "  make help                - Show this help message"
-	@echo ""
-	@echo "Examples:"
-	@echo "  make build && make test"
-	@echo "  make install-cloudpebble"
-	@echo "  make install-ip IP=192.168.1.100"
