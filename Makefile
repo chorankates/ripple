@@ -241,6 +241,8 @@ screenshot-all-modes: build
 	@echo ""
 	@echo "=== All screenshots complete! ==="
 	@ls -la $(SCREENSHOT_DIR)/$(PLATFORM)-*.png
+	@echo "Killing emulator..."
+	@pkill -f "qemu-pebble" 2>/dev/null || true
 
 # Screenshot all modes on all platforms (the full matrix)
 # Usage: make screenshot-matrix
