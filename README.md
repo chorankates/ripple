@@ -95,8 +95,9 @@ pebble build
 pebble install --phone <IP_ADDRESS>
 ```
 
+```bach
+pebble install --cloudpebble
+```
+
 Or install the generated `.pbw` file from the `build` directory.
 
-## License
-
-MIT
