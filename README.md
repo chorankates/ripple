@@ -8,7 +8,7 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 - Custom timer with hours and minutes selection
 - Pause, resume, and restart functionality
 - Vibration alert on completion
-- 10 different visual display modes
+- 11 different visual display modes
 - Support for all Pebble platforms (Aplite, Basalt, Chalk, Diorite, Emery)
 
 ## Display Modes
@@ -17,6 +17,7 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 |------|-------------|--------------|
 | Text | Standard digital countdown | Large numeric display showing time as h:mm:ss or m:ss |
 | Blocks | Grid-based visualization | 12x8 grid of blocks that empty from bottom-right to top-left as time passes |
+| Vertical Blocks | Vertical grid visualization | 8x12 grid of blocks that fill from bottom to top, left to right, as time passes |
 | Clock | Analog clock face | Circular clock with hour markers, filled arc for remaining time, and sweeping hand |
 | Ring | Progress ring | Thick circular arc around screen edge that depletes clockwise |
 | Hourglass | Sand timer simulation | Classic hourglass shape with particles moving from top chamber to bottom |

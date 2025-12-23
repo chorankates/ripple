@@ -21,6 +21,7 @@ typedef enum {
 typedef enum {
   DISPLAY_MODE_TEXT,
   DISPLAY_MODE_BLOCKS,
+  DISPLAY_MODE_VERTICAL_BLOCKS,
   DISPLAY_MODE_CLOCK,
   DISPLAY_MODE_RING,
   DISPLAY_MODE_HOURGLASS,
@@ -172,6 +173,7 @@ static const char* get_display_mode_name(DisplayMode mode) {
   switch (mode) {
     case DISPLAY_MODE_TEXT: return "Text";
     case DISPLAY_MODE_BLOCKS: return "Blocks";
+    case DISPLAY_MODE_VERTICAL_BLOCKS: return "Vertical Blocks";
     case DISPLAY_MODE_CLOCK: return "Clock";
     case DISPLAY_MODE_RING: return "Ring";
     case DISPLAY_MODE_HOURGLASS: return "Hourglass";
@@ -296,6 +298,62 @@ static void draw_blocks_mode(GContext *ctx, GRect bounds) {
       int block_index = (BLOCK_ROWS - 1 - row) * BLOCK_COLS + (BLOCK_COLS - 1 - col);
       int x = start_x + col * (block_size + BLOCK_PADDING);
       int y = start_y + row * (block_size + BLOCK_PADDING);
+      GRect block_rect = GRect(x, y, block_size, block_size);
+      
+      if (block_index < filled_blocks) {
+        graphics_context_set_fill_color(ctx, COLOR_BLOCKS_FULL);
+        graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
+      } else {
+        graphics_context_set_stroke_color(ctx, COLOR_BLOCKS_EMPTY);
+        graphics_draw_round_rect(ctx, block_rect, 2);
+      }
+    }
+  }
+  
+  static char time_buf[16];
+  format_time_adaptive(s_remaining_seconds, time_buf, sizeof(time_buf));
+  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
+  graphics_context_set_text_color(ctx, COLOR_TEXT_NORMAL);
+  graphics_draw_text(ctx, time_buf, font, text_rect, 
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+}
+
+// =============================================================================
+// Canvas Drawing - Vertical Blocks Mode
+// =============================================================================
+
+#define VERTICAL_BLOCK_COLS 8
+#define VERTICAL_BLOCK_ROWS 12
+#define VERTICAL_BLOCK_PADDING 2
+
+static void draw_vertical_blocks_mode(GContext *ctx, GRect bounds) {
+  int available_width = bounds.size.w - 20;
+  int available_height = bounds.size.h - 60;
+  
+  int block_width = (available_width - (VERTICAL_BLOCK_COLS - 1) * VERTICAL_BLOCK_PADDING) / VERTICAL_BLOCK_COLS;
+  int block_height = (available_height - (VERTICAL_BLOCK_ROWS - 1) * VERTICAL_BLOCK_PADDING) / VERTICAL_BLOCK_ROWS;
+  int block_size = (block_width < block_height) ? block_width : block_height;
+  
+  int grid_width = VERTICAL_BLOCK_COLS * block_size + (VERTICAL_BLOCK_COLS - 1) * VERTICAL_BLOCK_PADDING;
+  int grid_height = VERTICAL_BLOCK_ROWS * block_size + (VERTICAL_BLOCK_ROWS - 1) * VERTICAL_BLOCK_PADDING;
+  int start_x = (bounds.size.w - grid_width) / 2;
+  int start_y = (bounds.size.h - grid_height) / 2 - 10;
+  
+  int total_blocks = VERTICAL_BLOCK_COLS * VERTICAL_BLOCK_ROWS;
+  int filled_blocks = 0;
+  if (s_total_seconds > 0) {
+    filled_blocks = (s_remaining_seconds * total_blocks) / s_total_seconds;
+  }
+  
+  // Fill from bottom to top, right to left (countdown from left side)
+  for (int col = 0; col < VERTICAL_BLOCK_COLS; col++) {
+    for (int row = VERTICAL_BLOCK_ROWS - 1; row >= 0; row--) {
+      // Reverse column order: rightmost column has lowest index, leftmost has highest
+      int reversed_col = VERTICAL_BLOCK_COLS - 1 - col;
+      int block_index = reversed_col * VERTICAL_BLOCK_ROWS + (VERTICAL_BLOCK_ROWS - 1 - row);
+      int x = start_x + col * (block_size + VERTICAL_BLOCK_PADDING);
+      int y = start_y + row * (block_size + VERTICAL_BLOCK_PADDING);
       GRect block_rect = GRect(x, y, block_size, block_size);
       
       if (block_index < filled_blocks) {
@@ -964,6 +1022,9 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   switch (s_display_mode) {
     case DISPLAY_MODE_BLOCKS:
       draw_blocks_mode(ctx, bounds);
+      break;
+    case DISPLAY_MODE_VERTICAL_BLOCKS:
+      draw_vertical_blocks_mode(ctx, bounds);
       break;
     case DISPLAY_MODE_CLOCK:
       draw_clock_mode(ctx, bounds);
