@@ -2,34 +2,25 @@
 
 A countdown timer app for Pebble smartwatches with multiple visual display modes.
 
-## Features
-
-- Preset timer options (5, 10, 15, 30 minutes)
-- Custom timer with hours and minutes selection
-- Pause, resume, and restart functionality
-- Vibration alert on completion
-- 15 different visual display modes
-- Support for all Pebble platforms (Aplite, Basalt, Chalk, Diorite, Emery)
-
 ## Display Modes
 
 | Mode | Description | Screenshot |
 |------|-------------|------------|
-| Text | Large numeric display showing time as h:mm:ss or m:ss | ![Text](screenshots/basalt-text.png) |
-| Blocks | 12x8 grid of blocks that empty as time passes | ![Blocks](screenshots/basalt-blocks.png) |
-| Vertical Blocks | 8x12 grid filling bottom to top, left to right | ![Vertical Blocks](screenshots/basalt-vertical_blocks.png) |
-| Clock | Analog clock face with filled arc and sweeping hand | ![Clock](screenshots/basalt-clock.png) |
-| Ring | Thick circular arc that depletes clockwise | ![Ring](screenshots/basalt-ring.png) |
-| Hourglass | Sand timer with particles moving between chambers | ![Hourglass](screenshots/basalt-hourglass.png) |
-| Binary | Three rows of 6-bit binary dots (h/m/s) | ![Binary](screenshots/basalt-binary.png) |
-| Radial | Concentric rings for hours, minutes, seconds | ![Radial](screenshots/basalt-radial.png) |
-| Hex | Time in hexadecimal with decimal equivalent | ![Hex](screenshots/basalt-hex.png) |
-| Matrix | Falling green digits with time in center | ![Matrix](screenshots/basalt-matrix.png) |
-| Water Level | Container with draining water level | ![Water Level](screenshots/basalt-water_level.png) |
-| Spiral Out | Spiral pattern expanding outward | ![Spiral Out](screenshots/basalt-spiral_out.png) |
-| Spiral In | Spiral pattern contracting inward | ![Spiral In](screenshots/basalt-spiral_in.png) |
-| % Elapsed | Large percentage of time elapsed | ![% Elapsed](screenshots/basalt-percent.png) |
-| % Remaining | Large percentage of time remaining | ![% Remaining](screenshots/basalt-percent_remaining.png) |
+| Text | Large numeric display showing time as h:mm:ss or m:ss | ![Text](media/screenshots/basalt-text.png) |
+| Blocks | 12x8 grid of blocks that empty as time passes | ![Blocks](media/screenshots/basalt-blocks.png) |
+| Vertical Blocks | 8x12 grid filling bottom to top, left to right | ![Vertical Blocks](media/screenshots/basalt-vertical_blocks.png) |
+| Clock | Analog clock face with filled arc and sweeping hand | ![Clock](media/screenshots/basalt-clock.png) |
+| Ring | Thick circular arc that depletes clockwise | ![Ring](media/screenshots/basalt-ring.png) |
+| Hourglass | Sand timer with particles moving between chambers | ![Hourglass](media/screenshots/basalt-hourglass.png) |
+| Binary | Three rows of 6-bit binary dots (h/m/s) | ![Binary](media/screenshots/basalt-binary.png) |
+| Radial | Concentric rings for hours, minutes, seconds | ![Radial](media/screenshots/basalt-radial.png) |
+| Hex | Time in hexadecimal with decimal equivalent | ![Hex](media/screenshots/basalt-hex.png) |
+| Matrix | Falling green digits with time in center | ![Matrix](media/screenshots/basalt-matrix.png) |
+| Water Level | Container with draining water level | ![Water Level](media/screenshots/basalt-water_level.png) |
+| Spiral Out | Spiral pattern expanding outward | ![Spiral Out](media/screenshots/basalt-spiral_out.png) |
+| Spiral In | Spiral pattern contracting inward | ![Spiral In](media/screenshots/basalt-spiral_in.png) |
+| % Elapsed | Large percentage of time elapsed | ![% Elapsed](media/screenshots/basalt-percent.png) |
+| % Remaining | Large percentage of time remaining | ![% Remaining](media/screenshots/basalt-percent_remaining.png) |
 
 ## Controls
 
@@ -79,21 +70,4 @@ On color Pebble models (Basalt, Chalk, Emery), the app uses distinct colors:
 - Low time warning (under 10 seconds): Red text
 - Completed: Bright green text
 
-## development
-
-Requires the [Pebble SDK](https://developer.rebble.io/sdk/).
-
-```bash
-make build
-```
-
-
-```bash
-make install-ip IP=<IP_ADDRESS>
-
-```
-
-```bash
-make install-cloudpebble
-```
 
