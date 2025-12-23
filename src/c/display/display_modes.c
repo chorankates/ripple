@@ -756,6 +756,139 @@ void display_draw_water_level(GContext *ctx, GRect bounds, const DisplayContext 
 }
 
 // =============================================================================
+// Spiral Out Mode
+// =============================================================================
+
+#define SPIRAL_COLS 9
+#define SPIRAL_ROWS 9
+#define SPIRAL_PADDING 2
+
+// Generate spiral indices from center outward
+// Returns the order in which blocks should fill (0 = first to fill from center)
+static int spiral_out_index(int row, int col) {
+    int center_row = SPIRAL_ROWS / 2;
+    int center_col = SPIRAL_COLS / 2;
+    
+    // Distance from center determines spiral ring
+    int dr = row - center_row;
+    int dc = col - center_col;
+    int ring = (dr < 0 ? -dr : dr);
+    int dc_abs = (dc < 0 ? -dc : dc);
+    if (dc_abs > ring) ring = dc_abs;
+    
+    if (ring == 0) return 0;  // Center block
+    
+    // Calculate position within ring (clockwise from top)
+    int ring_start = (2 * ring - 1) * (2 * ring - 1);  // First index in this ring
+    int ring_size = 8 * ring;  // Number of blocks in this ring
+    
+    int pos = 0;
+    if (row == center_row - ring) {
+        // Top edge: left to right
+        pos = (col - (center_col - ring));
+    } else if (col == center_col + ring) {
+        // Right edge: top to bottom
+        pos = (2 * ring) + (row - (center_row - ring));
+    } else if (row == center_row + ring) {
+        // Bottom edge: right to left
+        pos = (4 * ring) + ((center_col + ring) - col);
+    } else if (col == center_col - ring) {
+        // Left edge: bottom to top
+        pos = (6 * ring) + ((center_row + ring) - row);
+    }
+    
+    return ring_start + (pos % ring_size);
+}
+
+void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    int available_width = bounds.size.w - 20;
+    int available_height = bounds.size.h - 60;
+    
+    int block_width = (available_width - (SPIRAL_COLS - 1) * SPIRAL_PADDING) / SPIRAL_COLS;
+    int block_height = (available_height - (SPIRAL_ROWS - 1) * SPIRAL_PADDING) / SPIRAL_ROWS;
+    int block_size = (block_width < block_height) ? block_width : block_height;
+    
+    int grid_width = SPIRAL_COLS * block_size + (SPIRAL_COLS - 1) * SPIRAL_PADDING;
+    int grid_height = SPIRAL_ROWS * block_size + (SPIRAL_ROWS - 1) * SPIRAL_PADDING;
+    int start_x = (bounds.size.w - grid_width) / 2;
+    int start_y = (bounds.size.h - grid_height) / 2 - 10;
+    
+    int total_blocks = SPIRAL_COLS * SPIRAL_ROWS;
+    int filled_blocks = progress_calculate_blocks(dctx->remaining_seconds, dctx->total_seconds, total_blocks);
+    
+    for (int row = 0; row < SPIRAL_ROWS; row++) {
+        for (int col = 0; col < SPIRAL_COLS; col++) {
+            int spiral_idx = spiral_out_index(row, col);
+            int x = start_x + col * (block_size + SPIRAL_PADDING);
+            int y = start_y + row * (block_size + SPIRAL_PADDING);
+            GRect block_rect = GRect(x, y, block_size, block_size);
+            
+            // Spiral out fills from center, so lower spiral indices fill first
+            if (spiral_idx < filled_blocks) {
+                graphics_context_set_fill_color(ctx, COLOR_SPIRAL_FULL);
+                graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
+            } else {
+                graphics_context_set_stroke_color(ctx, COLOR_SPIRAL_EMPTY);
+                graphics_draw_round_rect(ctx, block_rect, 2);
+            }
+        }
+    }
+    
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
+}
+
+// =============================================================================
+// Spiral In Mode
+// =============================================================================
+
+void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    int available_width = bounds.size.w - 20;
+    int available_height = bounds.size.h - 60;
+    
+    int block_width = (available_width - (SPIRAL_COLS - 1) * SPIRAL_PADDING) / SPIRAL_COLS;
+    int block_height = (available_height - (SPIRAL_ROWS - 1) * SPIRAL_PADDING) / SPIRAL_ROWS;
+    int block_size = (block_width < block_height) ? block_width : block_height;
+    
+    int grid_width = SPIRAL_COLS * block_size + (SPIRAL_COLS - 1) * SPIRAL_PADDING;
+    int grid_height = SPIRAL_ROWS * block_size + (SPIRAL_ROWS - 1) * SPIRAL_PADDING;
+    int start_x = (bounds.size.w - grid_width) / 2;
+    int start_y = (bounds.size.h - grid_height) / 2 - 10;
+    
+    int total_blocks = SPIRAL_COLS * SPIRAL_ROWS;
+    int filled_blocks = progress_calculate_blocks(dctx->remaining_seconds, dctx->total_seconds, total_blocks);
+    
+    for (int row = 0; row < SPIRAL_ROWS; row++) {
+        for (int col = 0; col < SPIRAL_COLS; col++) {
+            int spiral_idx = spiral_out_index(row, col);
+            // Invert: higher spiral index (outer) fills first
+            int inverted_idx = (total_blocks - 1) - spiral_idx;
+            int x = start_x + col * (block_size + SPIRAL_PADDING);
+            int y = start_y + row * (block_size + SPIRAL_PADDING);
+            GRect block_rect = GRect(x, y, block_size, block_size);
+            
+            // Spiral in fills from outside, so higher spiral indices fill first
+            if (inverted_idx < filled_blocks) {
+                graphics_context_set_fill_color(ctx, COLOR_SPIRAL_FULL);
+                graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
+            } else {
+                graphics_context_set_stroke_color(ctx, COLOR_SPIRAL_EMPTY);
+                graphics_draw_round_rect(ctx, block_rect, 2);
+            }
+        }
+    }
+    
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
+}
+
+// =============================================================================
 // Master Draw Function
 // =============================================================================
 
@@ -796,6 +929,12 @@ void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, Animat
             break;
         case DISPLAY_MODE_WATER_LEVEL:
             display_draw_water_level(ctx, bounds, &dctx);
+            break;
+        case DISPLAY_MODE_SPIRAL_OUT:
+            display_draw_spiral_out(ctx, bounds, &dctx);
+            break;
+        case DISPLAY_MODE_SPIRAL_IN:
+            display_draw_spiral_in(ctx, bounds, &dctx);
             break;
         default:
             break;

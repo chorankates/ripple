@@ -47,6 +47,8 @@ const char* timer_display_mode_name(DisplayMode mode) {
         case DISPLAY_MODE_HEX:             return "Hex";
         case DISPLAY_MODE_MATRIX:          return "Matrix";
         case DISPLAY_MODE_WATER_LEVEL:     return "Water Level";
+        case DISPLAY_MODE_SPIRAL_OUT:      return "Spiral Out";
+        case DISPLAY_MODE_SPIRAL_IN:       return "Spiral In";
         default:                           return "Text";
     }
 }

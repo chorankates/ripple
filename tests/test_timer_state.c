@@ -262,7 +262,7 @@ bool test_cycle_display_mode(void) {
 bool test_cycle_display_mode_wraps(void) {
     TimerContext ctx;
     timer_context_init(&ctx);
-    ctx.display_mode = DISPLAY_MODE_WATER_LEVEL;  // Last mode
+    ctx.display_mode = DISPLAY_MODE_SPIRAL_IN;  // Last mode
     
     TimerEffects effects = timer_cycle_display_mode(&ctx);
     
@@ -277,6 +277,8 @@ bool test_display_mode_name(void) {
     TEST_ASSERT_EQUAL_STRING("Blocks", timer_display_mode_name(DISPLAY_MODE_BLOCKS));
     TEST_ASSERT_EQUAL_STRING("Matrix", timer_display_mode_name(DISPLAY_MODE_MATRIX));
     TEST_ASSERT_EQUAL_STRING("Water Level", timer_display_mode_name(DISPLAY_MODE_WATER_LEVEL));
+    TEST_ASSERT_EQUAL_STRING("Spiral Out", timer_display_mode_name(DISPLAY_MODE_SPIRAL_OUT));
+    TEST_ASSERT_EQUAL_STRING("Spiral In", timer_display_mode_name(DISPLAY_MODE_SPIRAL_IN));
     return true;
 }
 
@@ -388,6 +390,7 @@ bool test_handle_select_starts_custom_timer(void) {
     
     TEST_ASSERT_EQUAL(STATE_RUNNING, ctx.state);
     TEST_ASSERT_EQUAL(5400, ctx.remaining_seconds);  // (1*60 + 30) * 60
+    TEST_ASSERT_TRUE(effects.subscribe_tick_timer);
     return true;
 }
 

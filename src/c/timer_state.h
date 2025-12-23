@@ -40,6 +40,8 @@ typedef enum {
     DISPLAY_MODE_HEX,
     DISPLAY_MODE_MATRIX,
     DISPLAY_MODE_WATER_LEVEL,
+    DISPLAY_MODE_SPIRAL_OUT,
+    DISPLAY_MODE_SPIRAL_IN,
     DISPLAY_MODE_COUNT  // Used for cycling
 } DisplayMode;
 

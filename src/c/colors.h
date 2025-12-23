@@ -36,6 +36,8 @@
   #define COLOR_MATRIX_DIM GColorDarkGreen
   #define COLOR_WATER GColorVividCerulean
   #define COLOR_WATER_CONTAINER GColorWhite
+  #define COLOR_SPIRAL_FULL GColorMagenta
+  #define COLOR_SPIRAL_EMPTY GColorDarkGray
 #else
   #define COLOR_BACKGROUND GColorBlack
   #define COLOR_TEXT_NORMAL GColorWhite
@@ -64,5 +66,7 @@
   #define COLOR_MATRIX_DIM GColorWhite
   #define COLOR_WATER GColorWhite
   #define COLOR_WATER_CONTAINER GColorWhite
+  #define COLOR_SPIRAL_FULL GColorWhite
+  #define COLOR_SPIRAL_EMPTY GColorBlack
 #endif
 
