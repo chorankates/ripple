@@ -17,15 +17,13 @@ void settings_init_defaults(TimerSettings *settings) {
 // =============================================================================
 
 void settings_validate(TimerSettings *settings) {
-    // Validate display mode
-    if (settings->default_display_mode < 0 || 
-        settings->default_display_mode >= DISPLAY_MODE_COUNT) {
+    // Validate display mode (enum is unsigned, so only check upper bound)
+    if (settings->default_display_mode >= DISPLAY_MODE_COUNT) {
         settings->default_display_mode = DISPLAY_MODE_TEXT;
     }
     
     // Validate preset index (0-3 for presets, 4 for custom)
-    if (settings->default_preset_index < 0 || 
-        settings->default_preset_index > TIMER_CUSTOM_OPTION) {
+    if (settings->default_preset_index > TIMER_CUSTOM_OPTION) {
         settings->default_preset_index = 0;
     }
     
