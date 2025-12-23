@@ -61,13 +61,4 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 | UP | Restart timer from beginning |
 | BACK | Show exit confirmation |
 
-## Color Themes
-
-On color Pebble models (Basalt, Chalk, Emery), the app uses distinct colors:
-
-- Running timer: Green text
-- Paused timer: Yellow text
-- Low time warning (under 10 seconds): Red text
-- Completed: Bright green text
-
 
