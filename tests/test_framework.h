@@ -8,10 +8,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-// Test result tracking
-static int g_tests_run = 0;
-static int g_tests_passed = 0;
-static int g_tests_failed = 0;
+// Test result tracking (defined in test_main.c)
+extern int g_tests_run;
+extern int g_tests_passed;
+extern int g_tests_failed;
 
 // Colors for terminal output
 #define COLOR_RED    "\033[31m"
