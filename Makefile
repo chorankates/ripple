@@ -66,7 +66,7 @@ install-ip: build
 # =============================================================================
 
 # Directory for screenshots
-SCREENSHOT_DIR = screenshots
+SCREENSHOT_DIR = media/screenshots
 
 # Available platforms (subset - most commonly used)
 PLATFORMS = aplite basalt chalk diorite emery
