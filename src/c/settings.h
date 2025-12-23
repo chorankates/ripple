@@ -61,3 +61,4 @@ void settings_apply_to_context(const TimerSettings *settings, TimerContext *ctx)
 void settings_update_from_context(TimerSettings *settings, const TimerContext *ctx);
 
 
+

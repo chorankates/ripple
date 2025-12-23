@@ -842,6 +842,124 @@ void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *
 }
 
 // =============================================================================
+// Percent Elapsed Mode
+// =============================================================================
+
+void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    int center_x = bounds.size.w / 2;
+    int center_y = bounds.size.h / 2;
+    
+    // Calculate elapsed percentage
+    int percent = 0;
+    if (dctx->total_seconds > 0) {
+        int elapsed = dctx->total_seconds - dctx->remaining_seconds;
+        percent = (elapsed * 100) / dctx->total_seconds;
+    }
+    
+    // Large percentage display
+    static char percent_buf[8];
+    snprintf(percent_buf, sizeof(percent_buf), "%d%%", percent);
+    
+    GFont large_font = fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
+    GRect percent_rect = GRect(0, center_y - 35, bounds.size.w, 50);
+    graphics_context_set_text_color(ctx, COLOR_PERCENT_TEXT);
+    graphics_draw_text(ctx, percent_buf, large_font, percent_rect,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    
+    // "elapsed" label
+    GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+    GRect label_rect = GRect(0, center_y - 55, bounds.size.w, 20);
+    graphics_context_set_text_color(ctx, COLOR_HINT);
+    graphics_draw_text(ctx, "elapsed", label_font, label_rect,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    
+    // Progress bar
+    int bar_y = center_y + 25;
+    int bar_height = 12;
+    int bar_margin = 20;
+    int bar_width = bounds.size.w - bar_margin * 2;
+    
+    // Background bar
+    graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR_BG);
+    graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
+    
+    // Filled portion (elapsed)
+    if (dctx->total_seconds > 0) {
+        int elapsed = dctx->total_seconds - dctx->remaining_seconds;
+        int progress_width = (elapsed * bar_width) / dctx->total_seconds;
+        if (progress_width > 0) {
+            graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR);
+            graphics_fill_rect(ctx, GRect(bar_margin, bar_y, progress_width, bar_height), 4, GCornersAll);
+        }
+    }
+    
+    // Remaining time below
+    if (!dctx->hide_time_text) {
+        GFont time_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect time_rect = GRect(0, bar_y + bar_height + 10, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, time_rect, time_font);
+    }
+}
+
+// =============================================================================
+// Percent Remaining Mode
+// =============================================================================
+
+void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    int center_x = bounds.size.w / 2;
+    int center_y = bounds.size.h / 2;
+    
+    // Calculate remaining percentage
+    int percent = 0;
+    if (dctx->total_seconds > 0) {
+        percent = (dctx->remaining_seconds * 100) / dctx->total_seconds;
+    }
+    
+    // Large percentage display
+    static char percent_buf[8];
+    snprintf(percent_buf, sizeof(percent_buf), "%d%%", percent);
+    
+    GFont large_font = fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
+    GRect percent_rect = GRect(0, center_y - 35, bounds.size.w, 50);
+    graphics_context_set_text_color(ctx, COLOR_PERCENT_TEXT);
+    graphics_draw_text(ctx, percent_buf, large_font, percent_rect,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    
+    // "remaining" label
+    GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+    GRect label_rect = GRect(0, center_y - 55, bounds.size.w, 20);
+    graphics_context_set_text_color(ctx, COLOR_HINT);
+    graphics_draw_text(ctx, "remaining", label_font, label_rect,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    
+    // Progress bar
+    int bar_y = center_y + 25;
+    int bar_height = 12;
+    int bar_margin = 20;
+    int bar_width = bounds.size.w - bar_margin * 2;
+    
+    // Background bar
+    graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR_BG);
+    graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
+    
+    // Filled portion (remaining)
+    if (dctx->total_seconds > 0) {
+        int progress_width = (dctx->remaining_seconds * bar_width) / dctx->total_seconds;
+        if (progress_width > 0) {
+            graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR);
+            graphics_fill_rect(ctx, GRect(bar_margin, bar_y, progress_width, bar_height), 4, GCornersAll);
+        }
+    }
+    
+    // Remaining time below
+    if (!dctx->hide_time_text) {
+        GFont time_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect time_rect = GRect(0, bar_y + bar_height + 10, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, time_rect, time_font);
+    }
+}
+
+// =============================================================================
 // Spiral In Mode
 // =============================================================================
 
@@ -935,6 +1053,12 @@ void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, Animat
             break;
         case DISPLAY_MODE_SPIRAL_IN:
             display_draw_spiral_in(ctx, bounds, &dctx);
+            break;
+        case DISPLAY_MODE_PERCENT:
+            display_draw_percent(ctx, bounds, &dctx);
+            break;
+        case DISPLAY_MODE_PERCENT_REMAINING:
+            display_draw_percent_remaining(ctx, bounds, &dctx);
             break;
         default:
             break;

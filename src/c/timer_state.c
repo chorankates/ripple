@@ -49,6 +49,8 @@ const char* timer_display_mode_name(DisplayMode mode) {
         case DISPLAY_MODE_WATER_LEVEL:     return "Water Level";
         case DISPLAY_MODE_SPIRAL_OUT:      return "Spiral Out";
         case DISPLAY_MODE_SPIRAL_IN:       return "Spiral In";
+        case DISPLAY_MODE_PERCENT:         return "% Elapsed";
+        case DISPLAY_MODE_PERCENT_REMAINING: return "% Remaining";
         default:                           return "Text";
     }
 }

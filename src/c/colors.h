@@ -38,6 +38,9 @@
   #define COLOR_WATER_CONTAINER GColorWhite
   #define COLOR_SPIRAL_FULL GColorMagenta
   #define COLOR_SPIRAL_EMPTY GColorDarkGray
+  #define COLOR_PERCENT_TEXT GColorChromeYellow
+  #define COLOR_PERCENT_BAR GColorChromeYellow
+  #define COLOR_PERCENT_BAR_BG GColorDarkGray
 #else
   #define COLOR_BACKGROUND GColorBlack
   #define COLOR_TEXT_NORMAL GColorWhite
@@ -68,5 +71,8 @@
   #define COLOR_WATER_CONTAINER GColorWhite
   #define COLOR_SPIRAL_FULL GColorWhite
   #define COLOR_SPIRAL_EMPTY GColorBlack
+  #define COLOR_PERCENT_TEXT GColorWhite
+  #define COLOR_PERCENT_BAR GColorWhite
+  #define COLOR_PERCENT_BAR_BG GColorBlack
 #endif
 

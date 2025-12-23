@@ -90,6 +90,8 @@ void display_draw_matrix(GContext *ctx, GRect bounds, const DisplayContext *dctx
 void display_draw_water_level(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *dctx);
+void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dctx);
+void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 
 // =============================================================================
 // Master Draw Function

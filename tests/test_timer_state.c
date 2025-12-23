@@ -262,7 +262,7 @@ bool test_cycle_display_mode(void) {
 bool test_cycle_display_mode_wraps(void) {
     TimerContext ctx;
     timer_context_init(&ctx);
-    ctx.display_mode = DISPLAY_MODE_SPIRAL_IN;  // Last mode
+    ctx.display_mode = DISPLAY_MODE_PERCENT_REMAINING;  // Last mode
     
     TimerEffects effects = timer_cycle_display_mode(&ctx);
     
@@ -279,6 +279,8 @@ bool test_display_mode_name(void) {
     TEST_ASSERT_EQUAL_STRING("Water Level", timer_display_mode_name(DISPLAY_MODE_WATER_LEVEL));
     TEST_ASSERT_EQUAL_STRING("Spiral Out", timer_display_mode_name(DISPLAY_MODE_SPIRAL_OUT));
     TEST_ASSERT_EQUAL_STRING("Spiral In", timer_display_mode_name(DISPLAY_MODE_SPIRAL_IN));
+    TEST_ASSERT_EQUAL_STRING("% Elapsed", timer_display_mode_name(DISPLAY_MODE_PERCENT));
+    TEST_ASSERT_EQUAL_STRING("% Remaining", timer_display_mode_name(DISPLAY_MODE_PERCENT_REMAINING));
     return true;
 }
 

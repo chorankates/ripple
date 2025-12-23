@@ -72,3 +72,4 @@ int increment_wrap(int value, int max);
 // Decrement with wrap: 0 -> 23 for hours, 0 -> 59 for minutes
 int decrement_wrap(int value, int max);
 
+
