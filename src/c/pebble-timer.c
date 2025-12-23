@@ -27,6 +27,7 @@ typedef enum {
   DISPLAY_MODE_BINARY,
   DISPLAY_MODE_RADIAL,
   DISPLAY_MODE_HEX,
+  DISPLAY_MODE_MATRIX,
   DISPLAY_MODE_COUNT  // Used for cycling
 } DisplayMode;
 
@@ -65,6 +66,13 @@ static int s_sand_bottom[MAX_SAND_PARTICLES];  // Y positions in bottom chamber
 static int s_num_sand_top = MAX_SAND_PARTICLES;
 static int s_num_sand_bottom = 0;
 
+// Matrix rain simulation
+#define MATRIX_COLS 12
+#define MATRIX_ROWS 10
+static int s_matrix_drops[MATRIX_COLS];        // Y position of each drop head
+static int s_matrix_chars[MATRIX_COLS][MATRIX_ROWS];  // Character at each position
+static int s_matrix_speeds[MATRIX_COLS];       // Speed of each column
+
 // =============================================================================
 // Color Definitions (platform-aware)
 // =============================================================================
@@ -92,6 +100,9 @@ static int s_num_sand_bottom = 0;
   #define COLOR_RADIAL_MINUTES GColorOrange
   #define COLOR_RADIAL_SECONDS GColorYellow
   #define COLOR_HEX GColorVividViolet
+  #define COLOR_MATRIX_BRIGHT GColorBrightGreen
+  #define COLOR_MATRIX_MED GColorGreen
+  #define COLOR_MATRIX_DIM GColorDarkGreen
 #else
   #define COLOR_BACKGROUND GColorBlack
   #define COLOR_TEXT_NORMAL GColorWhite
@@ -115,6 +126,9 @@ static int s_num_sand_bottom = 0;
   #define COLOR_RADIAL_MINUTES GColorWhite
   #define COLOR_RADIAL_SECONDS GColorWhite
   #define COLOR_HEX GColorWhite
+  #define COLOR_MATRIX_BRIGHT GColorWhite
+  #define COLOR_MATRIX_MED GColorWhite
+  #define COLOR_MATRIX_DIM GColorWhite
 #endif
 
 // =============================================================================
@@ -159,6 +173,7 @@ static const char* get_display_mode_name(DisplayMode mode) {
     case DISPLAY_MODE_BINARY: return "Binary";
     case DISPLAY_MODE_RADIAL: return "Radial";
     case DISPLAY_MODE_HEX: return "Hex";
+    case DISPLAY_MODE_MATRIX: return "Matrix";
     default: return "Text";
   }
 }
@@ -212,6 +227,34 @@ static void update_hourglass_sand(void) {
   if (target_bottom > s_num_sand_bottom && s_num_sand_top > 0) {
     s_num_sand_bottom = target_bottom;
     s_num_sand_top = MAX_SAND_PARTICLES - s_num_sand_bottom;
+  }
+}
+
+// =============================================================================
+// Matrix Rain Initialization
+// =============================================================================
+
+static void init_matrix_rain(void) {
+  for (int col = 0; col < MATRIX_COLS; col++) {
+    // Random starting positions (use remaining_seconds as seed variation)
+    s_matrix_drops[col] = (col * 3 + s_remaining_seconds) % MATRIX_ROWS;
+    s_matrix_speeds[col] = 1 + (col % 3);  // Speeds 1-3
+    
+    // Initialize with random characters (digits and symbols)
+    for (int row = 0; row < MATRIX_ROWS; row++) {
+      s_matrix_chars[col][row] = '0' + ((col + row * 7) % 10);
+    }
+  }
+}
+
+static void update_matrix_rain(void) {
+  for (int col = 0; col < MATRIX_COLS; col++) {
+    // Move drops down based on speed and time
+    s_matrix_drops[col] = (s_matrix_drops[col] + s_matrix_speeds[col]) % (MATRIX_ROWS + 5);
+    
+    // Occasionally change characters for animation effect
+    int change_row = (s_remaining_seconds + col) % MATRIX_ROWS;
+    s_matrix_chars[col][change_row] = '0' + ((s_remaining_seconds + col) % 10);
   }
 }
 
@@ -731,6 +774,86 @@ static void draw_hex_mode(GContext *ctx, GRect bounds) {
 }
 
 // =============================================================================
+// Canvas Drawing - Matrix Rain Mode
+// =============================================================================
+
+static void draw_matrix_mode(GContext *ctx, GRect bounds) {
+  update_matrix_rain();
+  
+  int col_width = bounds.size.w / MATRIX_COLS;
+  int row_height = 14;
+  int start_y = 10;
+  
+  GFont char_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+  
+  // Draw falling characters
+  for (int col = 0; col < MATRIX_COLS; col++) {
+    int drop_head = s_matrix_drops[col];
+    int x = col * col_width + col_width / 2 - 4;
+    
+    for (int row = 0; row < MATRIX_ROWS; row++) {
+      int y = start_y + row * row_height;
+      
+      // Calculate distance from drop head for brightness
+      int dist = drop_head - row;
+      if (dist < 0) dist += MATRIX_ROWS + 5;
+      
+      // Only draw if within trail length
+      if (dist <= 6) {
+        static char char_buf[2];
+        char_buf[0] = s_matrix_chars[col][row];
+        char_buf[1] = '\0';
+        
+        // Color based on distance from head
+        if (dist == 0) {
+          graphics_context_set_text_color(ctx, COLOR_MATRIX_BRIGHT);
+        } else if (dist <= 2) {
+          graphics_context_set_text_color(ctx, COLOR_MATRIX_MED);
+        } else {
+          graphics_context_set_text_color(ctx, COLOR_MATRIX_DIM);
+        }
+        
+        graphics_draw_text(ctx, char_buf, char_font, 
+                          GRect(x, y, 12, 16),
+                          GTextOverflowModeTrailingEllipsis, 
+                          GTextAlignmentCenter, NULL);
+      }
+    }
+  }
+  
+  // Draw time prominently in center with black background for readability
+  static char time_buf[16];
+  format_time_adaptive(s_remaining_seconds, time_buf, sizeof(time_buf));
+  
+  int center_y = bounds.size.h / 2;
+  GFont time_font = fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
+  GRect time_rect = GRect(10, center_y - 22, bounds.size.w - 20, 44);
+  
+  // Draw dark background behind time
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_fill_rect(ctx, GRect(15, center_y - 20, bounds.size.w - 30, 40), 4, GCornersAll);
+  
+  // Draw time in bright green
+  graphics_context_set_text_color(ctx, COLOR_MATRIX_BRIGHT);
+  graphics_draw_text(ctx, time_buf, time_font, time_rect,
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  
+  // Draw subtle progress indicator at bottom
+  int bar_y = bounds.size.h - 8;
+  int bar_height = 3;
+  int bar_margin = 20;
+  int bar_width = bounds.size.w - bar_margin * 2;
+  
+  if (s_total_seconds > 0) {
+    int progress_width = (s_remaining_seconds * bar_width) / s_total_seconds;
+    graphics_context_set_fill_color(ctx, COLOR_MATRIX_DIM);
+    graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 1, GCornersAll);
+    graphics_context_set_fill_color(ctx, COLOR_MATRIX_BRIGHT);
+    graphics_fill_rect(ctx, GRect(bar_margin, bar_y, progress_width, bar_height), 1, GCornersAll);
+  }
+}
+
+// =============================================================================
 // Canvas Update Procedure
 // =============================================================================
 
@@ -765,6 +888,9 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
       break;
     case DISPLAY_MODE_HEX:
       draw_hex_mode(ctx, bounds);
+      break;
+    case DISPLAY_MODE_MATRIX:
+      draw_matrix_mode(ctx, bounds);
       break;
     default:
       break;
@@ -883,6 +1009,7 @@ static void start_timer(int minutes) {
   s_remaining_seconds = s_total_seconds;
   s_state = STATE_RUNNING;
   init_hourglass_sand();  // Reset hourglass for new timer
+  init_matrix_rain();     // Reset matrix rain for new timer
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
   update_display();
 }
@@ -915,6 +1042,7 @@ static void restart_timer(void) {
   s_remaining_seconds = s_total_seconds;
   s_state = STATE_RUNNING;
   init_hourglass_sand();  // Reset hourglass on restart
+  init_matrix_rain();     // Reset matrix rain on restart
   update_display();
 }
 
