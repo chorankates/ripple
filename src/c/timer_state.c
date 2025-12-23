@@ -224,10 +224,12 @@ TimerEffects timer_handle_select(TimerContext *ctx) {
         }
             
         case STATE_RUNNING:
-            return timer_pause(ctx);
+            // No action on select when running (use DOWN to pause)
+            break;
             
         case STATE_PAUSED:
-            return timer_resume(ctx);
+            // No action on select when paused (use DOWN to resume)
+            break;
             
         case STATE_COMPLETED:
             return timer_restart(ctx);
@@ -325,7 +327,7 @@ TimerEffects timer_handle_down(TimerContext *ctx) {
             break;
             
         case STATE_PAUSED:
-            return timer_cancel(ctx);
+            return timer_resume(ctx);
             
         case STATE_COMPLETED:
             return timer_dismiss_completion(ctx);
@@ -336,8 +338,7 @@ TimerEffects timer_handle_down(TimerContext *ctx) {
             break;
             
         case STATE_RUNNING:
-            // No action
-            break;
+            return timer_pause(ctx);
     }
     
     return effects;
