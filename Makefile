@@ -204,15 +204,39 @@ screenshot-mode: build
 	pebble screenshot --emulator $(PLATFORM) $(SCREENSHOT_DIR)/$(PLATFORM)-$(MODE).png; \
 	echo "Saved: $(SCREENSHOT_DIR)/$(PLATFORM)-$(MODE).png"
 
-# Screenshot all display modes on current platform
+# Screenshot all display modes on current platform (sequential, single emulator session)
 # Usage: make screenshot-all-modes [PLATFORM=basalt]
 screenshot-all-modes: build
 	@mkdir -p $(SCREENSHOT_DIR)
 	@echo "=== Screenshotting all modes on $(PLATFORM) ==="
-	@for mode in $(DISPLAY_MODES); do \
-		echo ""; \
-		echo "--- Mode: $$mode ---"; \
-		$(MAKE) --no-print-directory screenshot-mode MODE=$$mode PLATFORM=$(PLATFORM); \
+	@echo "Installing app..."
+	@pebble install --emulator $(PLATFORM)
+	@echo "Waiting $(INSTALL_DELAY)s for app to load..."
+	@sleep $(INSTALL_DELAY)
+	@WID=$$(xdotool search --name qemu | tail -1); \
+	if [ -z "$$WID" ]; then \
+		echo "ERROR: Could not find emulator window. Is it running?"; \
+		exit 1; \
+	fi; \
+	echo "Found emulator window: $$WID"; \
+	\
+	echo "Starting timer..."; \
+	xdotool windowactivate --sync $$WID key --delay 100 s; \
+	sleep $(SETTLE_DELAY); \
+	\
+	first=1; \
+	for mode in $(DISPLAY_MODES); do \
+		if [ $$first -eq 1 ]; then \
+			first=0; \
+		else \
+			echo "Long press to advance mode..."; \
+			xdotool windowactivate --sync $$WID keydown s; \
+			sleep $(LONG_PRESS_DURATION); \
+			xdotool windowactivate --sync $$WID keyup s; \
+			sleep $(SETTLE_DELAY); \
+		fi; \
+		echo "Taking screenshot: $$mode"; \
+		pebble screenshot --emulator $(PLATFORM) $(SCREENSHOT_DIR)/$(PLATFORM)-$$mode.png; \
 	done
 	@echo ""
 	@echo "=== All screenshots complete! ==="
