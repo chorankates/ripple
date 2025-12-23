@@ -422,17 +422,19 @@ bool test_handle_select_resumes_paused_timer(void) {
     return true;
 }
 
-bool test_handle_select_dismisses_completion(void) {
+bool test_handle_select_restarts_on_completion(void) {
     TimerContext ctx = {
         .state = STATE_COMPLETED,
-        .remaining_seconds = 0
+        .remaining_seconds = 0,
+        .total_seconds = 300
     };
     
     TimerEffects effects = timer_handle_select(&ctx);
     
-    TEST_ASSERT_EQUAL(STATE_SELECT_PRESET, ctx.state);
+    TEST_ASSERT_EQUAL(STATE_RUNNING, ctx.state);
+    TEST_ASSERT_EQUAL(300, ctx.remaining_seconds);
     TEST_ASSERT_TRUE(effects.stop_vibration);
-    TEST_ASSERT_TRUE(effects.unsubscribe_tick_timer);
+    TEST_ASSERT_TRUE(effects.update_display);
     return true;
 }
 
@@ -500,6 +502,22 @@ bool test_handle_up_restarts_when_paused(void) {
     return true;
 }
 
+bool test_handle_up_restarts_on_completion(void) {
+    TimerContext ctx = {
+        .state = STATE_COMPLETED,
+        .remaining_seconds = 0,
+        .total_seconds = 300
+    };
+    
+    TimerEffects effects = timer_handle_up(&ctx);
+    
+    TEST_ASSERT_EQUAL(STATE_RUNNING, ctx.state);
+    TEST_ASSERT_EQUAL(300, ctx.remaining_seconds);
+    TEST_ASSERT_TRUE(effects.stop_vibration);
+    TEST_ASSERT_TRUE(effects.update_display);
+    return true;
+}
+
 bool test_handle_up_confirms_exit(void) {
     TimerContext ctx = {
         .state = STATE_CONFIRM_EXIT,
@@ -548,6 +566,21 @@ bool test_handle_down_cancels_when_paused(void) {
     TimerEffects effects = timer_handle_down(&ctx);
     
     TEST_ASSERT_EQUAL(STATE_SELECT_PRESET, ctx.state);
+    TEST_ASSERT_TRUE(effects.unsubscribe_tick_timer);
+    return true;
+}
+
+bool test_handle_down_dismisses_completion(void) {
+    TimerContext ctx = {
+        .state = STATE_COMPLETED,
+        .remaining_seconds = 0,
+        .total_seconds = 300
+    };
+    
+    TimerEffects effects = timer_handle_down(&ctx);
+    
+    TEST_ASSERT_EQUAL(STATE_SELECT_PRESET, ctx.state);
+    TEST_ASSERT_TRUE(effects.stop_vibration);
     TEST_ASSERT_TRUE(effects.unsubscribe_tick_timer);
     return true;
 }
@@ -671,7 +704,7 @@ void run_timer_state_tests(void) {
     RUN_TEST(test_handle_select_starts_custom_timer);
     RUN_TEST(test_handle_select_pauses_running_timer);
     RUN_TEST(test_handle_select_resumes_paused_timer);
-    RUN_TEST(test_handle_select_dismisses_completion);
+    RUN_TEST(test_handle_select_restarts_on_completion);
     TEST_SUITE_END();
     
     TEST_SUITE_BEGIN("UP Button Handler");
@@ -680,6 +713,7 @@ void run_timer_state_tests(void) {
     RUN_TEST(test_handle_up_increments_custom_hours);
     RUN_TEST(test_handle_up_wraps_custom_hours);
     RUN_TEST(test_handle_up_restarts_when_paused);
+    RUN_TEST(test_handle_up_restarts_on_completion);
     RUN_TEST(test_handle_up_confirms_exit);
     TEST_SUITE_END();
     
@@ -687,6 +721,7 @@ void run_timer_state_tests(void) {
     RUN_TEST(test_handle_down_increments_preset);
     RUN_TEST(test_handle_down_wraps_preset);
     RUN_TEST(test_handle_down_cancels_when_paused);
+    RUN_TEST(test_handle_down_dismisses_completion);
     RUN_TEST(test_handle_down_declines_exit);
     TEST_SUITE_END();
     

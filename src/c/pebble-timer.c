@@ -233,7 +233,7 @@ static void update_display(void) {
         case STATE_COMPLETED:
             snprintf(title_buf, sizeof(title_buf), "Complete!");
             snprintf(time_buf, sizeof(time_buf), "0:00");
-            snprintf(hint_buf, sizeof(hint_buf), "Press any button");
+            snprintf(hint_buf, sizeof(hint_buf), "SELECT/UP: Restart\nDOWN: Dismiss");
             text_layer_set_text_color(s_time_layer, COLOR_TEXT_COMPLETED);
             break;
             

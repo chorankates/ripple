@@ -143,6 +143,11 @@ TimerEffects timer_cancel(TimerContext *ctx) {
 TimerEffects timer_restart(TimerContext *ctx) {
     TimerEffects effects = timer_effects_none();
     
+    // Stop vibration if restarting from completed state
+    if (ctx->state == STATE_COMPLETED) {
+        effects.stop_vibration = true;
+    }
+    
     ctx->remaining_seconds = ctx->total_seconds;
     ctx->state = STATE_RUNNING;
     
@@ -225,7 +230,7 @@ TimerEffects timer_handle_select(TimerContext *ctx) {
             return timer_resume(ctx);
             
         case STATE_COMPLETED:
-            return timer_dismiss_completion(ctx);
+            return timer_restart(ctx);
             
         case STATE_CONFIRM_EXIT:
             // Do nothing on select in confirm state
@@ -281,7 +286,7 @@ TimerEffects timer_handle_up(TimerContext *ctx) {
             return timer_restart(ctx);
             
         case STATE_COMPLETED:
-            return timer_dismiss_completion(ctx);
+            return timer_restart(ctx);
             
         case STATE_CONFIRM_EXIT:
             effects = timer_cancel(ctx);
