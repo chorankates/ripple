@@ -190,8 +190,12 @@ screenshot-mode: build
 		i=$$((i + 1)); \
 	done; \
 	\
-	echo "Starting timer (short press)..."; \
-	xdotool windowactivate --sync $$WID key --delay 100 s; \
+	if [ $$mode_idx -eq 0 ]; then \
+		echo "Starting timer (short press, no mode change needed)..."; \
+		xdotool windowactivate --sync $$WID key --delay 100 s; \
+	else \
+		echo "Timer started by long press keyup"; \
+	fi; \
 	\
 	echo "Waiting $(SETTLE_DELAY)s for animation to settle..."; \
 	sleep $(SETTLE_DELAY); \
