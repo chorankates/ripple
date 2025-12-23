@@ -155,8 +155,8 @@ emulator-kill:
 #   make screenshot-all-modes PLATFORM=basalt
 # =============================================================================
 
-# Long press duration in seconds
-LONG_PRESS_DURATION = 0.6
+# Long press duration in seconds (app requires 500ms, but emulator needs more)
+LONG_PRESS_DURATION = 1.2
 
 # Screenshot a specific mode
 # Usage: make screenshot-mode MODE=blocks [PLATFORM=basalt]
@@ -185,13 +185,13 @@ screenshot-mode: build
 	i=0; while [ $$i -lt $$mode_idx ]; do \
 		xdotool windowactivate --sync $$WID keydown s; \
 		sleep $(LONG_PRESS_DURATION); \
-		xdotool keyup s; \
+		xdotool windowactivate --sync $$WID keyup s; \
 		sleep $(BUTTON_DELAY); \
 		i=$$((i + 1)); \
 	done; \
 	\
-	echo "Starting timer..."; \
-	xdotool windowactivate --sync $$WID key s; \
+	echo "Starting timer (short press)..."; \
+	xdotool windowactivate --sync $$WID key --delay 100 s; \
 	\
 	echo "Waiting $(SETTLE_DELAY)s for animation to settle..."; \
 	sleep $(SETTLE_DELAY); \
