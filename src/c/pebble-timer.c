@@ -28,6 +28,7 @@ typedef enum {
   DISPLAY_MODE_RADIAL,
   DISPLAY_MODE_HEX,
   DISPLAY_MODE_MATRIX,
+  DISPLAY_MODE_WATER_LEVEL,
   DISPLAY_MODE_COUNT  // Used for cycling
 } DisplayMode;
 
@@ -103,6 +104,8 @@ static int s_matrix_speeds[MATRIX_COLS];       // Speed of each column
   #define COLOR_MATRIX_BRIGHT GColorBrightGreen
   #define COLOR_MATRIX_MED GColorGreen
   #define COLOR_MATRIX_DIM GColorDarkGreen
+  #define COLOR_WATER GColorVividCerulean
+  #define COLOR_WATER_CONTAINER GColorWhite
 #else
   #define COLOR_BACKGROUND GColorBlack
   #define COLOR_TEXT_NORMAL GColorWhite
@@ -129,6 +132,8 @@ static int s_matrix_speeds[MATRIX_COLS];       // Speed of each column
   #define COLOR_MATRIX_BRIGHT GColorWhite
   #define COLOR_MATRIX_MED GColorWhite
   #define COLOR_MATRIX_DIM GColorWhite
+  #define COLOR_WATER GColorWhite
+  #define COLOR_WATER_CONTAINER GColorWhite
 #endif
 
 // =============================================================================
@@ -174,6 +179,7 @@ static const char* get_display_mode_name(DisplayMode mode) {
     case DISPLAY_MODE_RADIAL: return "Radial";
     case DISPLAY_MODE_HEX: return "Hex";
     case DISPLAY_MODE_MATRIX: return "Matrix";
+    case DISPLAY_MODE_WATER_LEVEL: return "Water Level";
     default: return "Text";
   }
 }
@@ -854,6 +860,94 @@ static void draw_matrix_mode(GContext *ctx, GRect bounds) {
 }
 
 // =============================================================================
+// Canvas Drawing - Water Level Mode
+// =============================================================================
+
+static void draw_water_level_mode(GContext *ctx, GRect bounds) {
+  int center_x = bounds.size.w / 2;
+  int center_y = bounds.size.h / 2 - 10;
+  
+  // Container dimensions
+  int container_width = 50;
+  int container_height = 100;
+  int container_top = center_y - container_height / 2;
+  int container_bottom = container_top + container_height;
+  int container_left = center_x - container_width / 2;
+  int container_right = center_x + container_width / 2;
+  
+  // Draw container outline (beaker/glass shape)
+  graphics_context_set_stroke_color(ctx, COLOR_WATER_CONTAINER);
+  graphics_context_set_stroke_width(ctx, 2);
+  
+  // Left side
+  graphics_draw_line(ctx, GPoint(container_left, container_top + 10), 
+                         GPoint(container_left, container_bottom));
+  // Right side
+  graphics_draw_line(ctx, GPoint(container_right, container_top + 10), 
+                         GPoint(container_right, container_bottom));
+  // Bottom
+  graphics_draw_line(ctx, GPoint(container_left, container_bottom), 
+                         GPoint(container_right, container_bottom));
+  // Top rim (wider)
+  int rim_width = container_width + 8;
+  graphics_draw_line(ctx, GPoint(center_x - rim_width/2, container_top + 10), 
+                         GPoint(center_x + rim_width/2, container_top + 10));
+  // Rim sides
+  graphics_draw_line(ctx, GPoint(center_x - rim_width/2, container_top + 10), 
+                         GPoint(container_left, container_top + 10));
+  graphics_draw_line(ctx, GPoint(center_x + rim_width/2, container_top + 10), 
+                         GPoint(container_right, container_top + 10));
+  
+  // Calculate water level based on remaining time
+  int water_height = 0;
+  if (s_total_seconds > 0) {
+    water_height = (s_remaining_seconds * (container_height - 20)) / s_total_seconds;
+  }
+  
+  // Draw water (filled area)
+  if (water_height > 0) {
+    int water_top = container_bottom - water_height;
+    int water_bottom = container_bottom;
+    
+    // Fill water area
+    graphics_context_set_fill_color(ctx, COLOR_WATER);
+    graphics_fill_rect(ctx, GRect(container_left + 1, water_top, 
+                                  container_width - 2, water_height), 0, GCornerNone);
+    
+    // Draw water surface with slight wave effect
+    graphics_context_set_stroke_color(ctx, COLOR_WATER);
+    graphics_context_set_stroke_width(ctx, 2);
+    
+    // Animated wave effect based on remaining seconds
+    int wave_offset = (s_remaining_seconds % 4) - 2;
+    for (int x = container_left + 2; x < container_right - 2; x += 3) {
+      int y = water_top + (wave_offset * (x % 3 - 1)) / 2;
+      if (y >= water_top - 1 && y <= water_top + 1) {
+        graphics_draw_line(ctx, GPoint(x, y), GPoint(x + 2, y));
+      }
+    }
+  }
+  
+  // Draw measurement marks on container
+  graphics_context_set_stroke_color(ctx, COLOR_HINT);
+  graphics_context_set_stroke_width(ctx, 1);
+  for (int i = 1; i <= 4; i++) {
+    int mark_y = container_top + 10 + (i * (container_height - 20) / 5);
+    graphics_draw_line(ctx, GPoint(container_left - 5, mark_y), 
+                           GPoint(container_left, mark_y));
+  }
+  
+  // Draw time below container
+  static char time_buf[16];
+  format_time_adaptive(s_remaining_seconds, time_buf, sizeof(time_buf));
+  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  GRect text_rect = GRect(0, container_bottom + 10, bounds.size.w, 30);
+  graphics_context_set_text_color(ctx, COLOR_TEXT_NORMAL);
+  graphics_draw_text(ctx, time_buf, font, text_rect,
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+}
+
+// =============================================================================
 // Canvas Update Procedure
 // =============================================================================
 
@@ -891,6 +985,9 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
       break;
     case DISPLAY_MODE_MATRIX:
       draw_matrix_mode(ctx, bounds);
+      break;
+    case DISPLAY_MODE_WATER_LEVEL:
+      draw_water_level_mode(ctx, bounds);
       break;
     default:
       break;
