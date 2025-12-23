@@ -19,6 +19,7 @@ typedef struct {
     int total_seconds;
     TimerState state;
     DisplayMode display_mode;
+    bool hide_time_text;  // Hide m:ss overlay on visualizations
 } DisplayContext;
 
 // Create display context from timer context

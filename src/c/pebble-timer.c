@@ -2,6 +2,7 @@
 #include "colors.h"
 #include "time_utils.h"
 #include "timer_state.h"
+#include "settings.h"
 #include "display/display_common.h"
 
 // =============================================================================
@@ -22,6 +23,7 @@ static TextLayer *s_hint_layer;
 static Layer *s_canvas_layer;
 
 static TimerContext s_timer_ctx;
+static TimerSettings s_settings;
 static AnimationState s_anim_state;
 static AppTimer *s_vibrate_timer = NULL;
 
@@ -32,6 +34,46 @@ static AppTimer *s_vibrate_timer = NULL;
 static void update_display(void);
 static void apply_effects(TimerEffects effects);
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed);
+
+// =============================================================================
+// Settings Persistence
+// =============================================================================
+
+static void settings_load(void) {
+    // Initialize with defaults
+    settings_init_defaults(&s_settings);
+    
+    // Check if we have saved settings
+    if (persist_exists(SETTINGS_KEY_VERSION)) {
+        int version = persist_read_int(SETTINGS_KEY_VERSION);
+        if (version == SETTINGS_VERSION) {
+            // Load saved settings
+            if (persist_exists(SETTINGS_KEY_DISPLAY_MODE)) {
+                s_settings.default_display_mode = persist_read_int(SETTINGS_KEY_DISPLAY_MODE);
+            }
+            if (persist_exists(SETTINGS_KEY_DEFAULT_TIME)) {
+                s_settings.default_preset_index = persist_read_int(SETTINGS_KEY_DEFAULT_TIME);
+            }
+            if (persist_exists(SETTINGS_KEY_HIDE_TIME)) {
+                s_settings.hide_time_text = persist_read_bool(SETTINGS_KEY_HIDE_TIME);
+            }
+        }
+    }
+    
+    // Validate loaded settings
+    settings_validate(&s_settings);
+}
+
+static void settings_save(void) {
+    // Update settings from current context
+    settings_update_from_context(&s_settings, &s_timer_ctx);
+    
+    // Write to persistent storage
+    persist_write_int(SETTINGS_KEY_VERSION, SETTINGS_VERSION);
+    persist_write_int(SETTINGS_KEY_DISPLAY_MODE, s_settings.default_display_mode);
+    persist_write_int(SETTINGS_KEY_DEFAULT_TIME, s_settings.default_preset_index);
+    persist_write_bool(SETTINGS_KEY_HIDE_TIME, s_settings.hide_time_text);
+}
 
 // =============================================================================
 // Vibration Handling
@@ -222,6 +264,11 @@ static void select_long_click_handler(ClickRecognizerRef recognizer, void *conte
     apply_effects(effects);
 }
 
+static void up_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+    TimerEffects effects = timer_handle_up_long(&s_timer_ctx);
+    apply_effects(effects);
+}
+
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     TimerEffects effects = timer_handle_up(&s_timer_ctx);
     apply_effects(effects);
@@ -243,6 +290,7 @@ static void click_config_provider(void *context) {
     window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
     window_single_click_subscribe(BUTTON_ID_BACK, back_click_handler);
     window_long_click_subscribe(BUTTON_ID_SELECT, 500, select_long_click_handler, NULL);
+    window_long_click_subscribe(BUTTON_ID_UP, 500, up_long_click_handler, NULL);
 }
 
 // =============================================================================
@@ -310,8 +358,14 @@ static void window_unload(Window *window) {
 // =============================================================================
 
 static void init(void) {
+    // Load saved settings
+    settings_load();
+    
     // Initialize timer context with defaults
     timer_context_init(&s_timer_ctx);
+    
+    // Apply saved settings to context
+    settings_apply_to_context(&s_settings, &s_timer_ctx);
     
     // Initialize animation state
     animation_init_hourglass(&s_anim_state.hourglass);
@@ -331,6 +385,9 @@ static void init(void) {
 }
 
 static void deinit(void) {
+    // Save settings before exiting
+    settings_save();
+    
     stop_vibration_loop();
     tick_timer_service_unsubscribe();
     window_destroy(s_main_window);
