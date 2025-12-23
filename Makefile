@@ -113,16 +113,6 @@ screenshot:
 	@echo "Taking screenshot: $(SCREENSHOT_DIR)/$(PLATFORM)-$(NAME).png"
 	pebble screenshot --emulator $(PLATFORM) $(SCREENSHOT_DIR)/$(PLATFORM)-$(NAME).png
 
-# Take screenshots from all platform emulators (must be running)
-screenshot-all:
-	@mkdir -p $(SCREENSHOT_DIR)
-	@for platform in $(PLATFORMS); do \
-		echo "Taking screenshot from $$platform..."; \
-		pebble screenshot --emulator $$platform $(SCREENSHOT_DIR)/$$platform-$(NAME).png 2>/dev/null || \
-			echo "  ($$platform emulator not running, skipping)"; \
-	done
-	@echo "Screenshots saved to $(SCREENSHOT_DIR)/"
-
 # Kill all emulators
 emulator-kill:
 	@echo "Killing all Pebble emulators..."
