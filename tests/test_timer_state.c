@@ -396,7 +396,7 @@ bool test_handle_select_starts_custom_timer(void) {
     return true;
 }
 
-bool test_handle_select_pauses_running_timer(void) {
+bool test_handle_select_no_op_when_running(void) {
     TimerContext ctx = {
         .state = STATE_RUNNING,
         .remaining_seconds = 100
@@ -404,12 +404,12 @@ bool test_handle_select_pauses_running_timer(void) {
     
     TimerEffects effects = timer_handle_select(&ctx);
     
-    TEST_ASSERT_EQUAL(STATE_PAUSED, ctx.state);
-    TEST_ASSERT_TRUE(effects.update_display);
+    TEST_ASSERT_EQUAL(STATE_RUNNING, ctx.state);  // Unchanged - use DOWN to pause
+    TEST_ASSERT_FALSE(effects.update_display);
     return true;
 }
 
-bool test_handle_select_resumes_paused_timer(void) {
+bool test_handle_select_no_op_when_paused(void) {
     TimerContext ctx = {
         .state = STATE_PAUSED,
         .remaining_seconds = 100
@@ -417,8 +417,8 @@ bool test_handle_select_resumes_paused_timer(void) {
     
     TimerEffects effects = timer_handle_select(&ctx);
     
-    TEST_ASSERT_EQUAL(STATE_RUNNING, ctx.state);
-    TEST_ASSERT_TRUE(effects.update_display);
+    TEST_ASSERT_EQUAL(STATE_PAUSED, ctx.state);  // Unchanged - use DOWN to resume
+    TEST_ASSERT_FALSE(effects.update_display);
     return true;
 }
 
@@ -557,7 +557,20 @@ bool test_handle_down_wraps_preset(void) {
     return true;
 }
 
-bool test_handle_down_cancels_when_paused(void) {
+bool test_handle_down_pauses_running_timer(void) {
+    TimerContext ctx = {
+        .state = STATE_RUNNING,
+        .remaining_seconds = 100
+    };
+    
+    TimerEffects effects = timer_handle_down(&ctx);
+    
+    TEST_ASSERT_EQUAL(STATE_PAUSED, ctx.state);
+    TEST_ASSERT_TRUE(effects.update_display);
+    return true;
+}
+
+bool test_handle_down_resumes_paused_timer(void) {
     TimerContext ctx = {
         .state = STATE_PAUSED,
         .remaining_seconds = 100
@@ -565,8 +578,8 @@ bool test_handle_down_cancels_when_paused(void) {
     
     TimerEffects effects = timer_handle_down(&ctx);
     
-    TEST_ASSERT_EQUAL(STATE_SELECT_PRESET, ctx.state);
-    TEST_ASSERT_TRUE(effects.unsubscribe_tick_timer);
+    TEST_ASSERT_EQUAL(STATE_RUNNING, ctx.state);
+    TEST_ASSERT_TRUE(effects.update_display);
     return true;
 }
 
@@ -702,8 +715,8 @@ void run_timer_state_tests(void) {
     RUN_TEST(test_handle_select_enters_custom_hours);
     RUN_TEST(test_handle_select_advances_to_minutes);
     RUN_TEST(test_handle_select_starts_custom_timer);
-    RUN_TEST(test_handle_select_pauses_running_timer);
-    RUN_TEST(test_handle_select_resumes_paused_timer);
+    RUN_TEST(test_handle_select_no_op_when_running);
+    RUN_TEST(test_handle_select_no_op_when_paused);
     RUN_TEST(test_handle_select_restarts_on_completion);
     TEST_SUITE_END();
     
@@ -720,7 +733,8 @@ void run_timer_state_tests(void) {
     TEST_SUITE_BEGIN("DOWN Button Handler");
     RUN_TEST(test_handle_down_increments_preset);
     RUN_TEST(test_handle_down_wraps_preset);
-    RUN_TEST(test_handle_down_cancels_when_paused);
+    RUN_TEST(test_handle_down_pauses_running_timer);
+    RUN_TEST(test_handle_down_resumes_paused_timer);
     RUN_TEST(test_handle_down_dismisses_completion);
     RUN_TEST(test_handle_down_declines_exit);
     TEST_SUITE_END();
