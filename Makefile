@@ -144,11 +144,11 @@ emulator-kill:
 #
 # Requires: xdotool (sudo apt install xdotool)
 #
-# Key mappings in QEMU emulator:
-#   Up arrow    = Up button
-#   Down arrow  = Down button
-#   Return      = Select button
-#   BackSpace   = Back button
+# Key mappings in QEMU Pebble emulator:
+#   q = Back button
+#   w = Up button
+#   s = Select button
+#   x = Down button
 #
 # Usage:
 #   make screenshot-mode MODE=blocks PLATFORM=basalt
@@ -183,15 +183,15 @@ screenshot-mode: build
 	done; \
 	echo "Cycling to mode index $$mode_idx ($(MODE))..."; \
 	i=0; while [ $$i -lt $$mode_idx ]; do \
-		xdotool windowactivate --sync $$WID keydown Return; \
+		xdotool windowactivate --sync $$WID keydown s; \
 		sleep $(LONG_PRESS_DURATION); \
-		xdotool keyup Return; \
+		xdotool keyup s; \
 		sleep $(BUTTON_DELAY); \
 		i=$$((i + 1)); \
 	done; \
 	\
 	echo "Starting timer..."; \
-	xdotool windowactivate --sync $$WID key Return; \
+	xdotool windowactivate --sync $$WID key s; \
 	\
 	echo "Waiting $(SETTLE_DELAY)s for animation to settle..."; \
 	sleep $(SETTLE_DELAY); \
