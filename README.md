@@ -1,5 +1,7 @@
 # ripple
 
+![ripple](media/ripple-banner-720x320.png)
+
 A countdown timer app for Pebble smartwatches with multiple visual display modes.
 
 ## Display Modes
