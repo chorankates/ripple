@@ -45,10 +45,16 @@ individually
 make screenshot-mode # default mode is 'text', can override with MODE=
 ```
 
-all of them
+all of them on single platform
 ```bash
-make screenshot-all-modes
+make screenshot-all-modes # default platform is 'basalt', can override with PLATFORM=
 ```
+
+all of them all of them
+```bash
+make screenshot-matrix
+```
+
 
 ## platforms
 
