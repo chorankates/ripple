@@ -1,4 +1,4 @@
-# Pebble Timer
+# ripple
 
 A countdown timer app for Pebble smartwatches with multiple visual display modes.
 

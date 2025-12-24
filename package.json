@@ -1,12 +1,12 @@
 {
-  "name": "pebble-timer",
+  "name": "ripple",
   "author": "conor.code@gmail.com",
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "pebble-timer",
+    "displayName": "ripple",
     "uuid": "4465e3b6-3438-4b28-9a33-cc345613d86d",
     "sdkVersion": "3",
     "enableMultiJS": true,
