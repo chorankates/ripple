@@ -13,6 +13,7 @@ int g_tests_failed = 0;
 // External test suite runners
 extern void run_time_utils_tests(void);
 extern void run_timer_state_tests(void);
+extern void run_settings_tests(void);
 
 int main(void) {
     printf("\n");
@@ -23,6 +24,7 @@ int main(void) {
     // Run all test suites
     run_time_utils_tests();
     run_timer_state_tests();
+    run_settings_tests();
     
     // Print summary
     print_test_summary();

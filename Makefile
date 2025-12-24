@@ -9,8 +9,11 @@
 # Compiler settings for tests (native compilation, not Pebble)
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c11 -g -I tests -I src/c
+GCOVR ?= gcovr
+COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
 TEST_SRCS = tests/test_main.c tests/test_time_utils.c tests/test_timer_state.c \
-            src/c/time_utils.c src/c/timer_state.c
+            tests/test_settings.c \
+            src/c/time_utils.c src/c/timer_state.c src/c/settings.c
 TEST_BIN = build/tests/test_runner
 
 # Default target
@@ -42,6 +45,21 @@ test-build:
 # Run tests with verbose output
 test-verbose: test-build
 	@./$(TEST_BIN) -v
+
+# Build, run, and generate coverage (HTML if gcovr is available)
+cover:
+	@mkdir -p build/tests
+	@echo "Building unit tests with coverage..."
+	@$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -o $(TEST_BIN) $(TEST_SRCS) $(COVERAGE_FLAGS)
+	@echo "Running unit tests..."
+	@./$(TEST_BIN)
+	@echo "Generating coverage report..."
+	@if command -v $(GCOVR) >/dev/null 2>&1; then \
+		$(GCOVR) -r . --html --html-details -o build/tests/coverage.html --xml -o build/tests/coverage.xml --print-summary; \
+		echo "Coverage report: build/tests/coverage.html"; \
+	else \
+		echo "gcovr not found; install gcovr for HTML/XML coverage output"; \
+	fi
 
 # =============================================================================
 # Deployment

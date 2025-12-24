@@ -438,6 +438,32 @@ bool test_handle_select_restarts_on_completion(void) {
     return true;
 }
 
+bool test_handle_select_long_cycles_display_mode(void) {
+    TimerContext ctx;
+    timer_context_init(&ctx);
+
+    TimerEffects effects = timer_handle_select_long(&ctx);
+
+    TEST_ASSERT_EQUAL(DISPLAY_MODE_BLOCKS, ctx.display_mode);
+    TEST_ASSERT_TRUE(effects.vibrate_short);
+    TEST_ASSERT_TRUE(effects.update_display);
+    return true;
+}
+
+bool test_handle_select_long_ignored_in_custom_entry(void) {
+    TimerContext ctx;
+    timer_context_init(&ctx);
+    ctx.state = STATE_SET_CUSTOM_MINUTES;
+    ctx.display_mode = DISPLAY_MODE_RING;
+
+    TimerEffects effects = timer_handle_select_long(&ctx);
+
+    TEST_ASSERT_EQUAL(DISPLAY_MODE_RING, ctx.display_mode);
+    TEST_ASSERT_FALSE(effects.update_display);
+    TEST_ASSERT_FALSE(effects.vibrate_short);
+    return true;
+}
+
 // =============================================================================
 // Input Handler Tests - UP Button
 // =============================================================================
@@ -528,6 +554,34 @@ bool test_handle_up_confirms_exit(void) {
     
     TEST_ASSERT_EQUAL(STATE_SELECT_PRESET, ctx.state);
     TEST_ASSERT_TRUE(effects.pop_window);
+    return true;
+}
+
+bool test_handle_up_long_toggles_hide_time_running(void) {
+    TimerContext ctx;
+    timer_context_init(&ctx);
+    ctx.state = STATE_RUNNING;
+    ctx.hide_time_text = false;
+
+    TimerEffects effects = timer_handle_up_long(&ctx);
+
+    TEST_ASSERT_TRUE(ctx.hide_time_text);
+    TEST_ASSERT_TRUE(effects.vibrate_short);
+    TEST_ASSERT_TRUE(effects.update_display);
+    return true;
+}
+
+bool test_handle_up_long_noop_when_inactive(void) {
+    TimerContext ctx;
+    timer_context_init(&ctx);
+    ctx.state = STATE_SELECT_PRESET;
+    ctx.hide_time_text = false;
+
+    TimerEffects effects = timer_handle_up_long(&ctx);
+
+    TEST_ASSERT_FALSE(ctx.hide_time_text);
+    TEST_ASSERT_FALSE(effects.update_display);
+    TEST_ASSERT_FALSE(effects.vibrate_short);
     return true;
 }
 
@@ -660,6 +714,26 @@ bool test_handle_back_pops_window_from_select_preset(void) {
 }
 
 // =============================================================================
+// Completion Handling Tests
+// =============================================================================
+
+bool test_timer_dismiss_completion_resets_state_and_effects(void) {
+    TimerContext ctx = {
+        .state = STATE_COMPLETED,
+        .remaining_seconds = 0,
+        .total_seconds = 120
+    };
+
+    TimerEffects effects = timer_dismiss_completion(&ctx);
+
+    TEST_ASSERT_EQUAL(STATE_SELECT_PRESET, ctx.state);
+    TEST_ASSERT_TRUE(effects.stop_vibration);
+    TEST_ASSERT_TRUE(effects.unsubscribe_tick_timer);
+    TEST_ASSERT_TRUE(effects.update_display);
+    return true;
+}
+
+// =============================================================================
 // Test Suite Runner
 // =============================================================================
 
@@ -718,6 +792,8 @@ void run_timer_state_tests(void) {
     RUN_TEST(test_handle_select_no_op_when_running);
     RUN_TEST(test_handle_select_no_op_when_paused);
     RUN_TEST(test_handle_select_restarts_on_completion);
+    RUN_TEST(test_handle_select_long_cycles_display_mode);
+    RUN_TEST(test_handle_select_long_ignored_in_custom_entry);
     TEST_SUITE_END();
     
     TEST_SUITE_BEGIN("UP Button Handler");
@@ -728,6 +804,8 @@ void run_timer_state_tests(void) {
     RUN_TEST(test_handle_up_restarts_when_paused);
     RUN_TEST(test_handle_up_restarts_on_completion);
     RUN_TEST(test_handle_up_confirms_exit);
+    RUN_TEST(test_handle_up_long_toggles_hide_time_running);
+    RUN_TEST(test_handle_up_long_noop_when_inactive);
     TEST_SUITE_END();
     
     TEST_SUITE_BEGIN("DOWN Button Handler");
@@ -744,6 +822,10 @@ void run_timer_state_tests(void) {
     RUN_TEST(test_handle_back_returns_to_preset_from_custom);
     RUN_TEST(test_handle_back_returns_to_paused_from_confirm);
     RUN_TEST(test_handle_back_pops_window_from_select_preset);
+    TEST_SUITE_END();
+
+    TEST_SUITE_BEGIN("Completion Handling");
+    RUN_TEST(test_timer_dismiss_completion_resets_state_and_effects);
     TEST_SUITE_END();
 }
 
