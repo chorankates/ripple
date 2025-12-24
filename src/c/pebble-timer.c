@@ -64,24 +64,50 @@ static void settings_save(void) {
 // =============================================================================
 
 #ifdef PBL_COLOR
-static const GColor s_color_options[] = {
-    GColorWhite, GColorLightGray, GColorDarkGray, GColorRed, GColorOrange,
-    GColorChromeYellow, GColorGreen, GColorBrightGreen, GColorCyan,
-    GColorVividCerulean, GColorBlue, GColorVividViolet, GColorMagenta
-};
-static const char *s_color_names[] = {
-    "White", "Light Gray", "Dark Gray", "Red", "Orange",
-    "Yellow", "Green", "Bright Green", "Cyan",
-    "Cerulean", "Blue", "Violet", "Magenta"
-};
+  #define COLOR_OPTION_COUNT 13
 #else
-static const GColor s_color_options[] = { GColorWhite, GColorBlack };
-static const char *s_color_names[] = { "White", "Black" };
+  #define COLOR_OPTION_COUNT 2
 #endif
 
-static const int s_color_option_count = sizeof(s_color_options) / sizeof(GColor);
+static GColor s_color_options[COLOR_OPTION_COUNT];
+static const char *s_color_names[COLOR_OPTION_COUNT] = {
+    #ifdef PBL_COLOR
+        "White", "Light Gray", "Dark Gray", "Red", "Orange",
+        "Yellow", "Green", "Bright Green", "Cyan",
+        "Cerulean", "Blue", "Violet", "Magenta"
+    #else
+        "White", "Black"
+    #endif
+};
+
+static bool s_color_options_initialized = false;
+static void ensure_color_options(void) {
+    if (s_color_options_initialized) return;
+    s_color_options_initialized = true;
+    #ifdef PBL_COLOR
+        s_color_options[0] = GColorWhite;
+        s_color_options[1] = GColorLightGray;
+        s_color_options[2] = GColorDarkGray;
+        s_color_options[3] = GColorRed;
+        s_color_options[4] = GColorOrange;
+        s_color_options[5] = GColorChromeYellow;
+        s_color_options[6] = GColorGreen;
+        s_color_options[7] = GColorBrightGreen;
+        s_color_options[8] = GColorCyan;
+        s_color_options[9] = GColorVividCerulean;
+        s_color_options[10] = GColorBlue;
+        s_color_options[11] = GColorVividViolet;
+        s_color_options[12] = GColorMagenta;
+    #else
+        s_color_options[0] = GColorWhite;
+        s_color_options[1] = GColorBlack;
+    #endif
+}
+
+static const int s_color_option_count = COLOR_OPTION_COUNT;
 
 static int color_index_for(GColor color) {
+    ensure_color_options();
     for (int i = 0; i < s_color_option_count; i++) {
         if (gcolor_equal(color, s_color_options[i])) {
             return i;
@@ -91,12 +117,14 @@ static int color_index_for(GColor color) {
 }
 
 static GColor color_next(GColor color) {
+    ensure_color_options();
     int idx = color_index_for(color);
     idx = (idx + 1) % s_color_option_count;
     return s_color_options[idx];
 }
 
 static const char* color_name_for(GColor color) {
+    ensure_color_options();
     return s_color_names[color_index_for(color)];
 }
 
