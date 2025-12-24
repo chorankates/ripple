@@ -30,6 +30,7 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 |--------|--------|
 | UP | Previous preset option |
 | DOWN | Next preset option |
+| DOWN (hold) | Display mode settings | 
 | SELECT | Start timer with selected preset |
 | SELECT (hold) | Cycle through display modes |
 | BACK | Exit app |
@@ -57,6 +58,7 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 | Button | Action |
 |--------|--------|
 | DOWN | Resume timer |
+| DOWN (hold) | Display mode settings |
 | SELECT (hold) | Cycle through display modes |
 | UP | Restart timer from beginning |
 | BACK | Show exit confirmation |
