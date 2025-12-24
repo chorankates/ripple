@@ -61,4 +61,10 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 | UP | Restart timer from beginning |
 | BACK | Show exit confirmation |
 
+### Visualization Settings
+
+- Long-press DOWN (on preset selection or while paused) to open the visualization settings menu.
+- Toggle individual visualizations on/off, set the default visualization, and choose primary/secondary/accent colors for each mode.
+- Changes apply immediately and are saved for the next launch.
+
 
