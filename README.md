@@ -2,6 +2,8 @@
 
 A countdown timer app for Pebble smartwatches with multiple visual display modes.
 
+Get it on the [app store](https://apps.rebble.io/en_US/application/694d70e931c43a000955699f)!
+
 ## Display Modes
 
 | Mode | Description | aplite | basalt | chalk | diorite | emery |
