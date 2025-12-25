@@ -56,6 +56,9 @@ typedef struct {
     TimerState state;
     DisplayMode display_mode;
     
+    // Enabled display modes (true = selectable)
+    bool display_mode_enabled[DISPLAY_MODE_COUNT];
+    
     // Timer values
     int remaining_seconds;
     int total_seconds;

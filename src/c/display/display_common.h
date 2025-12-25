@@ -20,10 +20,11 @@ typedef struct {
     TimerState state;
     DisplayMode display_mode;
     bool hide_time_text;  // Hide m:ss overlay on visualizations
+    const VisualizationColors *colors;  // Active palette for this mode
 } DisplayContext;
 
-// Create display context from timer context
-DisplayContext display_context_from_timer(const TimerContext *timer);
+// Create display context from timer context and palette
+DisplayContext display_context_from_timer(const TimerContext *timer, const VisualizationColors *colors);
 
 // =============================================================================
 // Hourglass Animation State
@@ -98,5 +99,5 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
 // =============================================================================
 
 // Draw the appropriate display mode, handling animation state internally
-void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, AnimationState *anim);
+void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, AnimationState *anim, const VisualizationColors *palettes);
 
