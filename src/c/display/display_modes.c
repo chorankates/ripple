@@ -958,6 +958,148 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
 }
 
 // =============================================================================
+// Fuzzy Time Mode - Relative time descriptions
+// =============================================================================
+
+// Get fuzzy time description based on remaining seconds
+static const char* get_fuzzy_time(int remaining_seconds, int total_seconds) {
+    // Handle edge cases
+    if (remaining_seconds <= 0) {
+        return "Done!";
+    }
+    
+    // Calculate progress percentage
+    int percent_remaining = (total_seconds > 0) ? (remaining_seconds * 100) / total_seconds : 100;
+    
+    // Progress-based descriptions (for any timer length)
+    if (percent_remaining >= 98) {
+        return "Just started";
+    }
+    if (percent_remaining <= 2) {
+        return "Almost done!";
+    }
+    if (percent_remaining <= 5) {
+        return "Nearly there";
+    }
+    
+    // Time-based descriptions
+    int minutes = remaining_seconds / 60;
+    int hours = remaining_seconds / 3600;
+    
+    // Seconds range
+    if (remaining_seconds < 10) {
+        return "Seconds left";
+    }
+    if (remaining_seconds < 30) {
+        return "Half a minute";
+    }
+    if (remaining_seconds < 60) {
+        return "Under a minute";
+    }
+    
+    // Minutes range
+    if (minutes == 1) {
+        return "About a minute";
+    }
+    if (minutes == 2) {
+        return "A couple minutes";
+    }
+    if (minutes < 5) {
+        return "A few minutes";
+    }
+    if (minutes < 10) {
+        return "Several minutes";
+    }
+    if (minutes < 15) {
+        return "About ten min";
+    }
+    if (minutes < 20) {
+        return "Quarter hour";
+    }
+    if (minutes < 25) {
+        return "About twenty min";
+    }
+    if (minutes < 35) {
+        return "Half an hour";
+    }
+    if (minutes < 50) {
+        return "About 45 min";
+    }
+    if (minutes < 60) {
+        return "Under an hour";
+    }
+    
+    // Hours range
+    if (hours == 1 && minutes < 75) {
+        return "About an hour";
+    }
+    if (hours == 1) {
+        return "Over an hour";
+    }
+    if (hours == 2 && minutes < 135) {
+        return "A couple hours";
+    }
+    if (hours < 4) {
+        return "A few hours";
+    }
+    if (hours < 6) {
+        return "Several hours";
+    }
+    if (hours < 12) {
+        return "Many hours";
+    }
+    if (hours < 24) {
+        return "Most of a day";
+    }
+    
+    return "A long time";
+}
+
+void display_draw_fuzzy(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    int center_y = bounds.size.h / 2;
+    
+    const char* fuzzy_text = get_fuzzy_time(dctx->remaining_seconds, dctx->total_seconds);
+    
+    // Main fuzzy time text
+    GFont main_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    GRect main_rect = GRect(5, center_y - 20, bounds.size.w - 10, 40);
+    graphics_context_set_text_color(ctx, COLOR_FUZZY_TEXT);
+    graphics_draw_text(ctx, fuzzy_text, main_font, main_rect,
+                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    
+    // "time left" label
+    GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+    GRect label_rect = GRect(0, center_y - 45, bounds.size.w, 24);
+    graphics_context_set_text_color(ctx, COLOR_FUZZY_LABEL);
+    graphics_draw_text(ctx, "time left", label_font, label_rect,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    
+    // Progress dots at bottom
+    int dot_y = bounds.size.h - 30;
+    int num_dots = 10;
+    int dot_spacing = 12;
+    int total_width = (num_dots - 1) * dot_spacing;
+    int start_x = (bounds.size.w - total_width) / 2;
+    
+    int filled_dots = 0;
+    if (dctx->total_seconds > 0) {
+        filled_dots = (dctx->remaining_seconds * num_dots) / dctx->total_seconds;
+    }
+    
+    for (int i = 0; i < num_dots; i++) {
+        int x = start_x + i * dot_spacing;
+        if (i < filled_dots) {
+            graphics_context_set_fill_color(ctx, COLOR_FUZZY_TEXT);
+            graphics_fill_circle(ctx, GPoint(x, dot_y), 4);
+        } else {
+            graphics_context_set_stroke_color(ctx, COLOR_HINT);
+            graphics_context_set_stroke_width(ctx, 1);
+            graphics_draw_circle(ctx, GPoint(x, dot_y), 4);
+        }
+    }
+}
+
+// =============================================================================
 // Spiral In Mode
 // =============================================================================
 
@@ -1057,6 +1199,9 @@ void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, Animat
             break;
         case DISPLAY_MODE_PERCENT_REMAINING:
             display_draw_percent_remaining(ctx, bounds, &dctx);
+            break;
+        case DISPLAY_MODE_FUZZY:
+            display_draw_fuzzy(ctx, bounds, &dctx);
             break;
         default:
             break;

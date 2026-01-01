@@ -41,6 +41,8 @@
   #define COLOR_PERCENT_TEXT GColorChromeYellow
   #define COLOR_PERCENT_BAR GColorChromeYellow
   #define COLOR_PERCENT_BAR_BG GColorDarkGray
+  #define COLOR_FUZZY_TEXT GColorMelon
+  #define COLOR_FUZZY_LABEL GColorPictonBlue
 #else
   #define COLOR_BACKGROUND GColorBlack
   #define COLOR_TEXT_NORMAL GColorWhite
@@ -74,5 +76,7 @@
   #define COLOR_PERCENT_TEXT GColorWhite
   #define COLOR_PERCENT_BAR GColorWhite
   #define COLOR_PERCENT_BAR_BG GColorBlack
+  #define COLOR_FUZZY_TEXT GColorWhite
+  #define COLOR_FUZZY_LABEL GColorWhite
 #endif
 
