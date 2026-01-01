@@ -21,6 +21,7 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 | Spiral In | Spiral pattern contracting inward | ![aplite](media/screenshots/aplite-spiral_in.png) | ![basalt](media/screenshots/basalt-spiral_in.png) | ![chalk](media/screenshots/chalk-spiral_in.png) | ![diorite](media/screenshots/diorite-spiral_in.png) | ![emery](media/screenshots/emery-spiral_in.png) |
 | % Elapsed | Large percentage of time elapsed | ![aplite](media/screenshots/aplite-percent.png) | ![basalt](media/screenshots/basalt-percent.png) | ![chalk](media/screenshots/chalk-percent.png) | ![diorite](media/screenshots/diorite-percent.png) | ![emery](media/screenshots/emery-percent.png) |
 | % Remaining | Large percentage of time remaining | ![aplite](media/screenshots/aplite-percent_remaining.png) | ![basalt](media/screenshots/basalt-percent_remaining.png) | ![chalk](media/screenshots/chalk-percent_remaining.png) | ![diorite](media/screenshots/diorite-percent_remaining.png) | ![emery](media/screenshots/emery-percent_remaining.png) |
+| Fuzzy | A relative time display | ![aplite](media/screenshoits/aplite-fuzzy.png) | ![basalt](media/screenshots/basalt-persent_remaining.png) | ![chalk](media/screenshots/chalk-fuzzy.png) | ![diorite](media/screenshots/diorite-fuzzy.png) | ![emery](media/screenshots/emery-fuzzy.png) | 
 
 ## Controls
 

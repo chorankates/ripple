@@ -55,7 +55,14 @@ all of them all of them
 make screenshot-matrix
 ```
 
+### potential issues
+
+  * `qemu` screenshotting integration doesn't have a lot of error checking - if running remotely, and stalling on the first shot "Installing app..", check your environment variables
+  * `qemu` screenshotting steals focus, best to leave it alone during the ~5 minutes it takes to run `make screenshot-matrix`
+  * don't forget to add your new mode to `DISPLAY_MODES` in [Makefile](Makefile)
 
 ## platforms
 
 currently supporting all platforms, need to think more about the tradeoffs of only supporting newer physical devices
+
+
