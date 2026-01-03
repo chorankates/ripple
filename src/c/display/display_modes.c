@@ -973,6 +973,80 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
 }
 
 // =============================================================================
+// Fuzzy Mode - Relative time with progress dots
+// =============================================================================
+
+#define FUZZY_DOTS 5
+
+static const char* fuzzy_get_label(int percent_remaining) {
+    if (percent_remaining >= 90) return "just started";
+    if (percent_remaining >= 75) return "warming up";
+    if (percent_remaining >= 50) return "making progress";
+    if (percent_remaining >= 25) return "halfway there";
+    if (percent_remaining >= 10) return "getting close";
+    return "almost done";
+}
+
+void display_draw_fuzzy(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
+    int center_x = bounds.size.w / 2;
+    int center_y = bounds.size.h / 2;
+    
+    // Calculate percentage remaining
+    int percent_remaining = 0;
+    if (dctx->total_seconds > 0) {
+        percent_remaining = (dctx->remaining_seconds * 100) / dctx->total_seconds;
+    }
+    
+    // Get fuzzy label
+    const char *label = fuzzy_get_label(percent_remaining);
+    
+    // Draw the fuzzy label text
+    GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    GRect label_rect = GRect(10, center_y - 35, bounds.size.w - 20, 40);
+    graphics_context_set_text_color(ctx, c->primary);
+    graphics_draw_text(ctx, label, label_font, label_rect,
+                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    
+    // Draw progress dots
+    int dot_radius = 8;
+    int dot_spacing = 28;
+    int dots_width = (FUZZY_DOTS - 1) * dot_spacing;
+    int dots_start_x = center_x - dots_width / 2;
+    int dots_y = center_y + 30;
+    
+    // Calculate how many dots should be filled (inverted: remaining = filled)
+    // More dots filled = more time remaining
+    int filled_dots = (percent_remaining * FUZZY_DOTS + 50) / 100;  // Round to nearest
+    if (filled_dots > FUZZY_DOTS) filled_dots = FUZZY_DOTS;
+    if (dctx->remaining_seconds > 0 && filled_dots == 0) filled_dots = 1;  // Always show at least 1 if time left
+    
+    for (int i = 0; i < FUZZY_DOTS; i++) {
+        int x = dots_start_x + i * dot_spacing;
+        GPoint dot_center = GPoint(x, dots_y);
+        
+        // Dots fill from left to right (first dots = more time remaining)
+        if (i < filled_dots) {
+            // Filled dot
+            graphics_context_set_fill_color(ctx, c->primary);
+            graphics_fill_circle(ctx, dot_center, dot_radius);
+        } else {
+            // Empty dot (outline only)
+            graphics_context_set_stroke_color(ctx, c->secondary);
+            graphics_context_set_stroke_width(ctx, 2);
+            graphics_draw_circle(ctx, dot_center, dot_radius);
+        }
+    }
+    
+    // Optional: show small hint label above dots
+    GFont hint_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+    GRect hint_rect = GRect(0, dots_y + dot_radius + 8, bounds.size.w, 20);
+    graphics_context_set_text_color(ctx, c->accent);
+    graphics_draw_text(ctx, "time left", hint_font, hint_rect,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+}
+
+// =============================================================================
 // Spiral In Mode
 // =============================================================================
 
@@ -1080,6 +1154,9 @@ void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, Animat
             break;
         case DISPLAY_MODE_PERCENT_REMAINING:
             display_draw_percent_remaining(ctx, bounds, &dctx);
+            break;
+        case DISPLAY_MODE_FUZZY:
+            display_draw_fuzzy(ctx, bounds, &dctx);
             break;
         default:
             break;

@@ -93,6 +93,7 @@ void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *
 void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayContext *dctx);
+void display_draw_fuzzy(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 
 // =============================================================================
 // Master Draw Function

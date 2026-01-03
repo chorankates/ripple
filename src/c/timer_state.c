@@ -56,6 +56,7 @@ const char* timer_display_mode_name(DisplayMode mode) {
         case DISPLAY_MODE_SPIRAL_IN:       return "Spiral In";
         case DISPLAY_MODE_PERCENT:         return "% Elapsed";
         case DISPLAY_MODE_PERCENT_REMAINING: return "% Remaining";
+        case DISPLAY_MODE_FUZZY:           return "Fuzzy";
         default:                           return "Text";
     }
 }
