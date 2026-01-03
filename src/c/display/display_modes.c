@@ -4,13 +4,14 @@
 // Display Context Creation
 // =============================================================================
 
-DisplayContext display_context_from_timer(const TimerContext *timer) {
+DisplayContext display_context_from_timer(const TimerContext *timer, const VisualizationColors *colors) {
     DisplayContext dctx = {
         .remaining_seconds = timer->remaining_seconds,
         .total_seconds = timer->total_seconds,
         .state = timer->state,
         .display_mode = timer->display_mode,
-        .hide_time_text = timer->hide_time_text
+        .hide_time_text = timer->hide_time_text,
+        .colors = colors
     };
     return dctx;
 }
@@ -85,6 +86,7 @@ static void draw_time_text(GContext *ctx, int remaining_seconds, GRect text_rect
 #define BLOCK_PADDING 2
 
 void display_draw_blocks(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int available_width = bounds.size.w - 20;
     int available_height = bounds.size.h - 60;
     
@@ -108,10 +110,10 @@ void display_draw_blocks(GContext *ctx, GRect bounds, const DisplayContext *dctx
             GRect block_rect = GRect(x, y, block_size, block_size);
             
             if (block_index < filled_blocks) {
-                graphics_context_set_fill_color(ctx, COLOR_BLOCKS_FULL);
+                graphics_context_set_fill_color(ctx, c->primary);
                 graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
             } else {
-                graphics_context_set_stroke_color(ctx, COLOR_BLOCKS_EMPTY);
+                graphics_context_set_stroke_color(ctx, c->secondary);
                 graphics_draw_round_rect(ctx, block_rect, 2);
             }
         }
@@ -133,6 +135,7 @@ void display_draw_blocks(GContext *ctx, GRect bounds, const DisplayContext *dctx
 #define VERTICAL_BLOCK_PADDING 2
 
 void display_draw_vertical_blocks(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int available_width = bounds.size.w - 20;
     int available_height = bounds.size.h - 60;
     
@@ -157,10 +160,10 @@ void display_draw_vertical_blocks(GContext *ctx, GRect bounds, const DisplayCont
             GRect block_rect = GRect(x, y, block_size, block_size);
             
             if (block_index < filled_blocks) {
-                graphics_context_set_fill_color(ctx, COLOR_BLOCKS_FULL);
+                graphics_context_set_fill_color(ctx, c->primary);
                 graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
             } else {
-                graphics_context_set_stroke_color(ctx, COLOR_BLOCKS_EMPTY);
+                graphics_context_set_stroke_color(ctx, c->secondary);
                 graphics_draw_round_rect(ctx, block_rect, 2);
             }
         }
@@ -178,13 +181,14 @@ void display_draw_vertical_blocks(GContext *ctx, GRect bounds, const DisplayCont
 // =============================================================================
 
 void display_draw_clock(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_x = bounds.size.w / 2;
     int center_y = bounds.size.h / 2 - 10;
     int radius = (bounds.size.w < bounds.size.h ? bounds.size.w : bounds.size.h) / 2 - 20;
     GPoint center = GPoint(center_x, center_y);
     
     // Clock face
-    graphics_context_set_stroke_color(ctx, COLOR_CLOCK_FACE);
+    graphics_context_set_stroke_color(ctx, c->secondary);
     graphics_context_set_stroke_width(ctx, 2);
     graphics_draw_circle(ctx, center, radius);
     
@@ -204,7 +208,7 @@ void display_draw_clock(GContext *ctx, GRect bounds, const DisplayContext *dctx)
     
     // Progress arc
     if (dctx->remaining_seconds > 0 && dctx->total_seconds > 0) {
-        graphics_context_set_fill_color(ctx, COLOR_CLOCK_REMAINING);
+        graphics_context_set_fill_color(ctx, c->primary);
         int segments = 60;
         int filled_segments = (dctx->remaining_seconds * segments) / dctx->total_seconds;
         
@@ -224,7 +228,7 @@ void display_draw_clock(GContext *ctx, GRect bounds, const DisplayContext *dctx)
                 center_x + (cos_lookup(next_angle) * outer_r / TRIG_MAX_RATIO),
                 center_y + (sin_lookup(next_angle) * outer_r / TRIG_MAX_RATIO));
             
-            graphics_context_set_stroke_color(ctx, COLOR_CLOCK_REMAINING);
+            graphics_context_set_stroke_color(ctx, c->primary);
             graphics_context_set_stroke_width(ctx, 3);
             graphics_draw_line(ctx, p1, p2);
             graphics_draw_line(ctx, p2, p3);
@@ -233,7 +237,7 @@ void display_draw_clock(GContext *ctx, GRect bounds, const DisplayContext *dctx)
     }
     
     // Center dot
-    graphics_context_set_fill_color(ctx, COLOR_CLOCK_FACE);
+    graphics_context_set_fill_color(ctx, c->secondary);
     graphics_fill_circle(ctx, center, 5);
     
     // Clock hand
@@ -247,7 +251,7 @@ void display_draw_clock(GContext *ctx, GRect bounds, const DisplayContext *dctx)
         GPoint hand_end = GPoint(
             center_x + (cos_lookup(hand_angle) * hand_length / TRIG_MAX_RATIO),
             center_y + (sin_lookup(hand_angle) * hand_length / TRIG_MAX_RATIO));
-        graphics_context_set_stroke_color(ctx, COLOR_CLOCK_HAND);
+        graphics_context_set_stroke_color(ctx, c->accent);
         graphics_context_set_stroke_width(ctx, 3);
         graphics_draw_line(ctx, center, hand_end);
     }
@@ -264,13 +268,14 @@ void display_draw_clock(GContext *ctx, GRect bounds, const DisplayContext *dctx)
 // =============================================================================
 
 void display_draw_ring(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_x = bounds.size.w / 2;
     int center_y = bounds.size.h / 2 - 5;
     int radius = (bounds.size.w < bounds.size.h ? bounds.size.w : bounds.size.h) / 2 - 15;
     GPoint center = GPoint(center_x, center_y);
     
     // Background ring
-    graphics_context_set_stroke_color(ctx, COLOR_RING_EMPTY);
+    graphics_context_set_stroke_color(ctx, c->secondary);
     graphics_context_set_stroke_width(ctx, 12);
     graphics_draw_circle(ctx, center, radius);
     
@@ -278,7 +283,7 @@ void display_draw_ring(GContext *ctx, GRect bounds, const DisplayContext *dctx) 
     if (dctx->remaining_seconds > 0 && dctx->total_seconds > 0) {
         int progress_degrees = progress_calculate_degrees(dctx->remaining_seconds, dctx->total_seconds);
         
-        graphics_context_set_stroke_color(ctx, COLOR_RING_FULL);
+        graphics_context_set_stroke_color(ctx, c->primary);
         graphics_context_set_stroke_width(ctx, 10);
         
         for (int deg = 0; deg < progress_degrees; deg += 3) {
@@ -301,6 +306,7 @@ void display_draw_ring(GContext *ctx, GRect bounds, const DisplayContext *dctx) 
 // =============================================================================
 
 void display_draw_hourglass(GContext *ctx, GRect bounds, const DisplayContext *dctx, HourglassState *anim) {
+    const VisualizationColors *c = dctx->colors;
     animation_update_hourglass(anim, dctx->remaining_seconds, dctx->total_seconds);
     
     int center_x = bounds.size.w / 2;
@@ -314,7 +320,7 @@ void display_draw_hourglass(GContext *ctx, GRect bounds, const DisplayContext *d
     int middle = center_y;
     
     // Hourglass outline
-    graphics_context_set_stroke_color(ctx, COLOR_HOURGLASS);
+    graphics_context_set_stroke_color(ctx, c->secondary);
     graphics_context_set_stroke_width(ctx, 2);
     
     // Top triangle
@@ -334,7 +340,7 @@ void display_draw_hourglass(GContext *ctx, GRect bounds, const DisplayContext *d
                            GPoint(center_x + glass_width/2, bottom));
     
     // Sand in top chamber
-    graphics_context_set_fill_color(ctx, COLOR_SAND);
+    graphics_context_set_fill_color(ctx, c->primary);
     int top_chamber_bottom = middle - 5;
     int sand_rows_top = (anim->num_sand_top + 7) / 8;
     
@@ -374,6 +380,7 @@ void display_draw_hourglass(GContext *ctx, GRect bounds, const DisplayContext *d
     // Falling sand particle
     if (dctx->state == STATE_RUNNING && anim->num_sand_top > 0) {
         int fall_y = middle + ((dctx->remaining_seconds % 2) * 5);
+        graphics_context_set_fill_color(ctx, c->primary);
         graphics_fill_circle(ctx, GPoint(center_x, fall_y), 2);
     }
     
@@ -389,6 +396,7 @@ void display_draw_hourglass(GContext *ctx, GRect bounds, const DisplayContext *d
 // =============================================================================
 
 void display_draw_binary(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     TimeComponents t = time_decompose(dctx->remaining_seconds);
     
     int center_x = bounds.size.w / 2;
@@ -408,10 +416,10 @@ void display_draw_binary(GContext *ctx, GRect bounds, const DisplayContext *dctx
         bool is_set = (t.hours >> bit) & 1;
         
         if (is_set) {
-            graphics_context_set_fill_color(ctx, COLOR_BINARY_ON);
+            graphics_context_set_fill_color(ctx, c->primary);
             graphics_fill_circle(ctx, GPoint(x, start_y + 10), dot_radius);
         } else {
-            graphics_context_set_stroke_color(ctx, COLOR_BINARY_OFF);
+            graphics_context_set_stroke_color(ctx, c->secondary);
             graphics_context_set_stroke_width(ctx, 2);
             graphics_draw_circle(ctx, GPoint(x, start_y + 10), dot_radius);
         }
@@ -426,10 +434,10 @@ void display_draw_binary(GContext *ctx, GRect bounds, const DisplayContext *dctx
         bool is_set = (t.minutes >> bit) & 1;
         
         if (is_set) {
-            graphics_context_set_fill_color(ctx, COLOR_BINARY_ON);
+            graphics_context_set_fill_color(ctx, c->primary);
             graphics_fill_circle(ctx, GPoint(x, min_y + 10), dot_radius);
         } else {
-            graphics_context_set_stroke_color(ctx, COLOR_BINARY_OFF);
+            graphics_context_set_stroke_color(ctx, c->secondary);
             graphics_context_set_stroke_width(ctx, 2);
             graphics_draw_circle(ctx, GPoint(x, min_y + 10), dot_radius);
         }
@@ -444,10 +452,10 @@ void display_draw_binary(GContext *ctx, GRect bounds, const DisplayContext *dctx
         bool is_set = (t.seconds >> bit) & 1;
         
         if (is_set) {
-            graphics_context_set_fill_color(ctx, COLOR_BINARY_ON);
+            graphics_context_set_fill_color(ctx, c->primary);
             graphics_fill_circle(ctx, GPoint(x, sec_y + 10), dot_radius);
         } else {
-            graphics_context_set_stroke_color(ctx, COLOR_BINARY_OFF);
+            graphics_context_set_stroke_color(ctx, c->secondary);
             graphics_context_set_stroke_width(ctx, 2);
             graphics_draw_circle(ctx, GPoint(x, sec_y + 10), dot_radius);
         }
@@ -476,6 +484,7 @@ void display_draw_binary(GContext *ctx, GRect bounds, const DisplayContext *dctx
 // =============================================================================
 
 void display_draw_radial(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_x = bounds.size.w / 2;
     int center_y = bounds.size.h / 2 - 10;
     GPoint center = GPoint(center_x, center_y);
@@ -488,13 +497,13 @@ void display_draw_radial(GContext *ctx, GRect bounds, const DisplayContext *dctx
     
     // Seconds ring (innermost)
     int sec_radius = outer_radius - 2 * (ring_width + ring_gap);
-    graphics_context_set_stroke_color(ctx, COLOR_BINARY_OFF);
+    graphics_context_set_stroke_color(ctx, c->secondary);
     graphics_context_set_stroke_width(ctx, ring_width);
     graphics_draw_circle(ctx, center, sec_radius);
     
     if (t.seconds > 0) {
         int sec_degrees = (t.seconds * 360) / 60;
-        graphics_context_set_stroke_color(ctx, COLOR_RADIAL_SECONDS);
+        graphics_context_set_stroke_color(ctx, c->accent);
         for (int deg = 0; deg < sec_degrees; deg += 4) {
             int32_t angle = (-90 + deg) * TRIG_MAX_ANGLE / 360;
             int x = center_x + (cos_lookup(angle) * sec_radius / TRIG_MAX_RATIO);
@@ -505,13 +514,13 @@ void display_draw_radial(GContext *ctx, GRect bounds, const DisplayContext *dctx
     
     // Minutes ring (middle)
     int min_radius = outer_radius - (ring_width + ring_gap);
-    graphics_context_set_stroke_color(ctx, COLOR_BINARY_OFF);
+    graphics_context_set_stroke_color(ctx, c->secondary);
     graphics_context_set_stroke_width(ctx, ring_width);
     graphics_draw_circle(ctx, center, min_radius);
     
     if (t.minutes > 0) {
         int min_degrees = (t.minutes * 360) / 60;
-        graphics_context_set_stroke_color(ctx, COLOR_RADIAL_MINUTES);
+        graphics_context_set_stroke_color(ctx, c->secondary);
         for (int deg = 0; deg < min_degrees; deg += 4) {
             int32_t angle = (-90 + deg) * TRIG_MAX_ANGLE / 360;
             int x = center_x + (cos_lookup(angle) * min_radius / TRIG_MAX_RATIO);
@@ -521,13 +530,13 @@ void display_draw_radial(GContext *ctx, GRect bounds, const DisplayContext *dctx
     }
     
     // Hours ring (outermost)
-    graphics_context_set_stroke_color(ctx, COLOR_BINARY_OFF);
+    graphics_context_set_stroke_color(ctx, c->secondary);
     graphics_context_set_stroke_width(ctx, ring_width);
     graphics_draw_circle(ctx, center, outer_radius);
     
     if (t.hours > 0) {
         int hour_degrees = (t.hours * 360) / 24;
-        graphics_context_set_stroke_color(ctx, COLOR_RADIAL_HOURS);
+        graphics_context_set_stroke_color(ctx, c->primary);
         for (int deg = 0; deg < hour_degrees; deg += 4) {
             int32_t angle = (-90 + deg) * TRIG_MAX_ANGLE / 360;
             int x = center_x + (cos_lookup(angle) * outer_radius / TRIG_MAX_RATIO);
@@ -544,13 +553,13 @@ void display_draw_radial(GContext *ctx, GRect bounds, const DisplayContext *dctx
     
     // Legend
     GFont tiny = fonts_get_system_font(FONT_KEY_GOTHIC_14);
-    graphics_context_set_text_color(ctx, COLOR_RADIAL_HOURS);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, "H", tiny, GRect(center_x - 45, bounds.size.h - 25, 20, 16),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    graphics_context_set_text_color(ctx, COLOR_RADIAL_MINUTES);
+    graphics_context_set_text_color(ctx, c->secondary);
     graphics_draw_text(ctx, "M", tiny, GRect(center_x - 10, bounds.size.h - 25, 20, 16),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    graphics_context_set_text_color(ctx, COLOR_RADIAL_SECONDS);
+    graphics_context_set_text_color(ctx, c->accent);
     graphics_draw_text(ctx, "S", tiny, GRect(center_x + 25, bounds.size.h - 25, 20, 16),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
@@ -560,6 +569,7 @@ void display_draw_radial(GContext *ctx, GRect bounds, const DisplayContext *dctx
 // =============================================================================
 
 void display_draw_hex(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_y = bounds.size.h / 2;
     
     static char hex_buf[16];
@@ -568,14 +578,14 @@ void display_draw_hex(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
     // Hex time
     GFont hex_font = fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
     GRect hex_rect = GRect(0, center_y - 30, bounds.size.w, 50);
-    graphics_context_set_text_color(ctx, COLOR_HEX);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, hex_buf, hex_font, hex_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
     // 0x prefix
     GFont prefix_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
     GRect prefix_rect = GRect(10, center_y - 50, 30, 24);
-    graphics_context_set_text_color(ctx, COLOR_HINT);
+    graphics_context_set_text_color(ctx, c->secondary);
     graphics_draw_text(ctx, "0x", prefix_font, prefix_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
     
@@ -584,7 +594,7 @@ void display_draw_hex(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
     snprintf(dec_buf, sizeof(dec_buf), "= %d sec", dctx->remaining_seconds);
     GFont dec_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     GRect dec_rect = GRect(0, center_y + 25, bounds.size.w, 24);
-    graphics_context_set_text_color(ctx, COLOR_HINT);
+    graphics_context_set_text_color(ctx, c->secondary);
     graphics_draw_text(ctx, dec_buf, dec_font, dec_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
@@ -594,12 +604,12 @@ void display_draw_hex(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
     int bar_margin = 20;
     int bar_width = bounds.size.w - bar_margin * 2;
     
-    graphics_context_set_fill_color(ctx, COLOR_BINARY_OFF);
+    graphics_context_set_fill_color(ctx, c->secondary);
     graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 3, GCornersAll);
     
     if (dctx->total_seconds > 0) {
         int progress_width = (dctx->remaining_seconds * bar_width) / dctx->total_seconds;
-        graphics_context_set_fill_color(ctx, COLOR_HEX);
+        graphics_context_set_fill_color(ctx, c->primary);
         graphics_fill_rect(ctx, GRect(bar_margin, bar_y, progress_width, bar_height), 3, GCornersAll);
     }
 }
@@ -609,6 +619,7 @@ void display_draw_hex(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
 // =============================================================================
 
 void display_draw_matrix(GContext *ctx, GRect bounds, const DisplayContext *dctx, MatrixState *anim) {
+    const VisualizationColors *c = dctx->colors;
     animation_update_matrix(anim, dctx->remaining_seconds);
     
     int col_width = bounds.size.w / MATRIX_COLS;
@@ -634,11 +645,11 @@ void display_draw_matrix(GContext *ctx, GRect bounds, const DisplayContext *dctx
                 char_buf[1] = '\0';
                 
                 if (dist == 0) {
-                    graphics_context_set_text_color(ctx, COLOR_MATRIX_BRIGHT);
+                    graphics_context_set_text_color(ctx, c->primary);
                 } else if (dist <= 2) {
-                    graphics_context_set_text_color(ctx, COLOR_MATRIX_MED);
+                    graphics_context_set_text_color(ctx, c->secondary);
                 } else {
-                    graphics_context_set_text_color(ctx, COLOR_MATRIX_DIM);
+                    graphics_context_set_text_color(ctx, c->accent);
                 }
                 
                 graphics_draw_text(ctx, char_buf, char_font, 
@@ -657,10 +668,10 @@ void display_draw_matrix(GContext *ctx, GRect bounds, const DisplayContext *dctx
     GFont time_font = fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
     GRect time_rect = GRect(10, time_center_y - 22, bounds.size.w - 20, 44);
     
-    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_context_set_fill_color(ctx, c->background);
     graphics_fill_rect(ctx, GRect(15, time_center_y - 20, bounds.size.w - 30, 40), 4, GCornersAll);
     
-    graphics_context_set_text_color(ctx, COLOR_MATRIX_BRIGHT);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, time_buf, time_font, time_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
@@ -672,9 +683,9 @@ void display_draw_matrix(GContext *ctx, GRect bounds, const DisplayContext *dctx
     
     if (dctx->total_seconds > 0) {
         int progress_width = (dctx->remaining_seconds * bar_width) / dctx->total_seconds;
-        graphics_context_set_fill_color(ctx, COLOR_MATRIX_DIM);
+        graphics_context_set_fill_color(ctx, c->accent);
         graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 1, GCornersAll);
-        graphics_context_set_fill_color(ctx, COLOR_MATRIX_BRIGHT);
+        graphics_context_set_fill_color(ctx, c->primary);
         graphics_fill_rect(ctx, GRect(bar_margin, bar_y, progress_width, bar_height), 1, GCornersAll);
     }
 }
@@ -684,6 +695,7 @@ void display_draw_matrix(GContext *ctx, GRect bounds, const DisplayContext *dctx
 // =============================================================================
 
 void display_draw_water_level(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_x = bounds.size.w / 2;
     int center_y = bounds.size.h / 2 - 10;
     
@@ -695,7 +707,7 @@ void display_draw_water_level(GContext *ctx, GRect bounds, const DisplayContext 
     int container_right = center_x + container_width / 2;
     
     // Container outline
-    graphics_context_set_stroke_color(ctx, COLOR_WATER_CONTAINER);
+    graphics_context_set_stroke_color(ctx, c->secondary);
     graphics_context_set_stroke_width(ctx, 2);
     
     graphics_draw_line(ctx, GPoint(container_left, container_top + 10), 
@@ -722,12 +734,12 @@ void display_draw_water_level(GContext *ctx, GRect bounds, const DisplayContext 
     if (water_height > 0) {
         int water_top = container_bottom - water_height;
         
-        graphics_context_set_fill_color(ctx, COLOR_WATER);
+        graphics_context_set_fill_color(ctx, c->primary);
         graphics_fill_rect(ctx, GRect(container_left + 1, water_top, 
                                       container_width - 2, water_height), 0, GCornerNone);
         
         // Wave effect
-        graphics_context_set_stroke_color(ctx, COLOR_WATER);
+        graphics_context_set_stroke_color(ctx, c->primary);
         graphics_context_set_stroke_width(ctx, 2);
         
         int wave_offset = (dctx->remaining_seconds % 4) - 2;
@@ -740,7 +752,7 @@ void display_draw_water_level(GContext *ctx, GRect bounds, const DisplayContext 
     }
     
     // Measurement marks
-    graphics_context_set_stroke_color(ctx, COLOR_HINT);
+    graphics_context_set_stroke_color(ctx, c->accent);
     graphics_context_set_stroke_width(ctx, 1);
     for (int i = 1; i <= 4; i++) {
         int mark_y = container_top + 10 + (i * (container_height - 20) / 5);
@@ -801,6 +813,7 @@ static int spiral_out_index(int row, int col) {
 }
 
 void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int available_width = bounds.size.w - 20;
     int available_height = bounds.size.h - 60;
     
@@ -825,10 +838,10 @@ void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *
             
             // Spiral out fills from center, so lower spiral indices fill first
             if (spiral_idx < filled_blocks) {
-                graphics_context_set_fill_color(ctx, COLOR_SPIRAL_FULL);
+                graphics_context_set_fill_color(ctx, c->primary);
                 graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
             } else {
-                graphics_context_set_stroke_color(ctx, COLOR_SPIRAL_EMPTY);
+                graphics_context_set_stroke_color(ctx, c->secondary);
                 graphics_draw_round_rect(ctx, block_rect, 2);
             }
         }
@@ -846,6 +859,7 @@ void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *
 // =============================================================================
 
 void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_y = bounds.size.h / 2;
     
     // Calculate elapsed percentage
@@ -861,14 +875,14 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
     
     GFont large_font = fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
     GRect percent_rect = GRect(0, center_y - 35, bounds.size.w, 50);
-    graphics_context_set_text_color(ctx, COLOR_PERCENT_TEXT);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, percent_buf, large_font, percent_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
     // "elapsed" label
     GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
     GRect label_rect = GRect(0, center_y - 55, bounds.size.w, 20);
-    graphics_context_set_text_color(ctx, COLOR_HINT);
+    graphics_context_set_text_color(ctx, c->secondary);
     graphics_draw_text(ctx, "elapsed", label_font, label_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
@@ -879,7 +893,7 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
     int bar_width = bounds.size.w - bar_margin * 2;
     
     // Background bar
-    graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR_BG);
+    graphics_context_set_fill_color(ctx, c->secondary);
     graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
     
     // Filled portion (elapsed)
@@ -887,7 +901,7 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
         int elapsed = dctx->total_seconds - dctx->remaining_seconds;
         int progress_width = (elapsed * bar_width) / dctx->total_seconds;
         if (progress_width > 0) {
-            graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR);
+            graphics_context_set_fill_color(ctx, c->primary);
             graphics_fill_rect(ctx, GRect(bar_margin, bar_y, progress_width, bar_height), 4, GCornersAll);
         }
     }
@@ -905,6 +919,7 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
 // =============================================================================
 
 void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_y = bounds.size.h / 2;
     
     // Calculate remaining percentage
@@ -919,14 +934,14 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
     
     GFont large_font = fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
     GRect percent_rect = GRect(0, center_y - 35, bounds.size.w, 50);
-    graphics_context_set_text_color(ctx, COLOR_PERCENT_TEXT);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, percent_buf, large_font, percent_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
     // "remaining" label
     GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
     GRect label_rect = GRect(0, center_y - 55, bounds.size.w, 20);
-    graphics_context_set_text_color(ctx, COLOR_HINT);
+    graphics_context_set_text_color(ctx, c->secondary);
     graphics_draw_text(ctx, "remaining", label_font, label_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
@@ -937,14 +952,14 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
     int bar_width = bounds.size.w - bar_margin * 2;
     
     // Background bar
-    graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR_BG);
+    graphics_context_set_fill_color(ctx, c->secondary);
     graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
     
     // Filled portion (remaining)
     if (dctx->total_seconds > 0) {
         int progress_width = (dctx->remaining_seconds * bar_width) / dctx->total_seconds;
         if (progress_width > 0) {
-            graphics_context_set_fill_color(ctx, COLOR_PERCENT_BAR);
+            graphics_context_set_fill_color(ctx, c->primary);
             graphics_fill_rect(ctx, GRect(bar_margin, bar_y, progress_width, bar_height), 4, GCornersAll);
         }
     }
@@ -1104,6 +1119,7 @@ void display_draw_fuzzy(GContext *ctx, GRect bounds, const DisplayContext *dctx)
 // =============================================================================
 
 void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int available_width = bounds.size.w - 20;
     int available_height = bounds.size.h - 60;
     
@@ -1130,10 +1146,10 @@ void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *d
             
             // Spiral in fills from outside, so higher spiral indices fill first
             if (inverted_idx < filled_blocks) {
-                graphics_context_set_fill_color(ctx, COLOR_SPIRAL_FULL);
+                graphics_context_set_fill_color(ctx, c->primary);
                 graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
             } else {
-                graphics_context_set_stroke_color(ctx, COLOR_SPIRAL_EMPTY);
+                graphics_context_set_stroke_color(ctx, c->secondary);
                 graphics_draw_round_rect(ctx, block_rect, 2);
             }
         }
@@ -1150,14 +1166,21 @@ void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *d
 // Master Draw Function
 // =============================================================================
 
-void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, AnimationState *anim) {
-    DisplayContext dctx = display_context_from_timer(timer);
+void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, AnimationState *anim, const VisualizationColors *palettes) {
+    DisplayMode mode = timer->display_mode;
+    if (mode >= DISPLAY_MODE_COUNT) {
+        mode = DISPLAY_MODE_TEXT;
+    }
+    
+    const VisualizationColors *colors = &palettes[mode];
+    DisplayContext dctx = display_context_from_timer(timer, colors);
+    dctx.display_mode = mode;
     
     // Clear background
-    graphics_context_set_fill_color(ctx, COLOR_BACKGROUND);
+    graphics_context_set_fill_color(ctx, colors->background);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
     
-    switch (timer->display_mode) {
+    switch (mode) {
         case DISPLAY_MODE_BLOCKS:
             display_draw_blocks(ctx, bounds, &dctx);
             break;

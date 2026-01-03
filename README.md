@@ -1,6 +1,8 @@
-# ripple
+![ripple](media/ripple-banner-720x320.png)
 
 A countdown timer app for Pebble smartwatches with multiple visual display modes.
+
+Get it on the [app store](https://apps.rebble.io/en_US/application/694d70e931c43a000955699f)!
 
 ## Display Modes
 
@@ -31,6 +33,7 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 |--------|--------|
 | UP | Previous preset option |
 | DOWN | Next preset option |
+| DOWN (hold) | Display mode settings | 
 | SELECT | Start timer with selected preset |
 | SELECT (hold) | Cycle through display modes |
 | BACK | Exit app |
@@ -58,8 +61,15 @@ A countdown timer app for Pebble smartwatches with multiple visual display modes
 | Button | Action |
 |--------|--------|
 | DOWN | Resume timer |
+| DOWN (hold) | Display mode settings |
 | SELECT (hold) | Cycle through display modes |
 | UP | Restart timer from beginning |
 | BACK | Show exit confirmation |
+
+### Visualization Settings
+
+- Long-press DOWN (on preset selection or while paused) to open the visualization settings menu.
+- Toggle individual visualizations on/off, set the default visualization, and choose primary/secondary/accent colors for each mode.
+- Changes apply immediately and are saved for the next launch.
 
 

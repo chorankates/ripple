@@ -10,6 +10,11 @@ void settings_init_defaults(TimerSettings *settings) {
     settings->hide_time_text = false;
     settings->default_preset_index = 0;  // First preset (5 min)
     settings->default_custom_minutes = 5;
+    
+    for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+        settings->visualization_enabled[i] = true;
+    }
+    colors_load_default_palettes(settings->visualization_colors);
 }
 
 // =============================================================================
@@ -20,6 +25,30 @@ void settings_validate(TimerSettings *settings) {
     // Validate display mode (enum is unsigned, so only check upper bound)
     if (settings->default_display_mode >= DISPLAY_MODE_COUNT) {
         settings->default_display_mode = DISPLAY_MODE_TEXT;
+    }
+    
+    // Ensure at least one visualization is enabled
+    bool any_enabled = false;
+    for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+        if (settings->visualization_enabled[i]) {
+            any_enabled = true;
+            break;
+        }
+    }
+    if (!any_enabled) {
+        for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+            settings->visualization_enabled[i] = true;
+        }
+    }
+    
+    // If the default mode is disabled, pick the first enabled one
+    if (!settings->visualization_enabled[settings->default_display_mode]) {
+        for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+            if (settings->visualization_enabled[i]) {
+                settings->default_display_mode = (DisplayMode)i;
+                break;
+            }
+        }
     }
     
     // Validate preset index (0-3 for presets, 4 for custom)
@@ -42,6 +71,9 @@ void settings_validate(TimerSettings *settings) {
 
 void settings_apply_to_context(const TimerSettings *settings, TimerContext *ctx) {
     ctx->display_mode = settings->default_display_mode;
+    for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+        ctx->display_mode_enabled[i] = settings->visualization_enabled[i];
+    }
     ctx->selected_preset = settings->default_preset_index;
     ctx->hide_time_text = settings->hide_time_text;
     
@@ -53,10 +85,61 @@ void settings_apply_to_context(const TimerSettings *settings, TimerContext *ctx)
 }
 
 void settings_update_from_context(TimerSettings *settings, const TimerContext *ctx) {
-    settings->default_display_mode = ctx->display_mode;
     settings->hide_time_text = ctx->hide_time_text;
     // Note: preset index and custom time are not auto-saved from context
     // They are saved when the user explicitly changes the default
 }
 
+// =============================================================================
+// Settings Persistence Helpers
+// =============================================================================
+
+static bool settings_load_blob(TimerSettings *settings) {
+    if (!persist_exists(SETTINGS_KEY_DATA)) {
+        return false;
+    }
+    
+    int bytes_read = persist_read_data(SETTINGS_KEY_DATA, settings, sizeof(TimerSettings));
+    return bytes_read == (int)sizeof(TimerSettings);
+}
+
+static void settings_load_legacy_v1(TimerSettings *settings) {
+    if (persist_exists(SETTINGS_KEY_DISPLAY_MODE)) {
+        settings->default_display_mode = persist_read_int(SETTINGS_KEY_DISPLAY_MODE);
+    }
+    if (persist_exists(SETTINGS_KEY_DEFAULT_TIME)) {
+        settings->default_preset_index = persist_read_int(SETTINGS_KEY_DEFAULT_TIME);
+    }
+    if (persist_exists(SETTINGS_KEY_HIDE_TIME)) {
+        settings->hide_time_text = persist_read_bool(SETTINGS_KEY_HIDE_TIME);
+    }
+}
+
+// =============================================================================
+// Settings Persistence API
+// =============================================================================
+
+void settings_persist_load(TimerSettings *settings) {
+    settings_init_defaults(settings);
+    
+    if (persist_exists(SETTINGS_KEY_VERSION)) {
+        int version = persist_read_int(SETTINGS_KEY_VERSION);
+        
+        if (version == SETTINGS_VERSION) {
+            if (!settings_load_blob(settings)) {
+                settings_init_defaults(settings);
+            }
+        } else if (version == 1) {
+            settings_load_legacy_v1(settings);
+        }
+    }
+    
+    settings_validate(settings);
+}
+
+void settings_persist_save(TimerSettings *settings) {
+    settings_validate(settings);
+    persist_write_int(SETTINGS_KEY_VERSION, SETTINGS_VERSION);
+    persist_write_data(SETTINGS_KEY_DATA, settings, sizeof(TimerSettings));
+}
 
