@@ -51,6 +51,19 @@ void settings_validate(TimerSettings *settings) {
         }
     }
     
+    // Validate visualization colors - reload defaults if background matches primary
+    // (which would make the display invisible/blank)
+    VisualizationColors default_palettes[DISPLAY_MODE_COUNT];
+    colors_load_default_palettes(default_palettes);
+    for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+        VisualizationColors *colors = &settings->visualization_colors[i];
+        // Check if background matches primary (invisible) or if colors look uninitialized
+        // GColorWhite on black background is fine, but same color = invisible
+        if (gcolor_equal(colors->background, colors->primary)) {
+            settings->visualization_colors[i] = default_palettes[i];
+        }
+    }
+    
     // Validate preset index (0-3 for presets, 4 for custom)
     if (settings->default_preset_index > TIMER_CUSTOM_OPTION) {
         settings->default_preset_index = 0;
