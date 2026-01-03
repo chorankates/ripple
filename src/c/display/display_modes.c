@@ -1071,6 +1071,7 @@ static const char* get_fuzzy_time(int remaining_seconds, int total_seconds) {
 }
 
 void display_draw_fuzzy(GContext *ctx, GRect bounds, const DisplayContext *dctx) {
+    const VisualizationColors *c = dctx->colors;
     int center_y = bounds.size.h / 2;
     
     const char* fuzzy_text = get_fuzzy_time(dctx->remaining_seconds, dctx->total_seconds);
@@ -1078,14 +1079,14 @@ void display_draw_fuzzy(GContext *ctx, GRect bounds, const DisplayContext *dctx)
     // Main fuzzy time text
     GFont main_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
     GRect main_rect = GRect(5, center_y - 20, bounds.size.w - 10, 40);
-    graphics_context_set_text_color(ctx, COLOR_FUZZY_TEXT);
+    graphics_context_set_text_color(ctx, c->secondary);
     graphics_draw_text(ctx, fuzzy_text, main_font, main_rect,
                        GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
     
     // "time left" label
     GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     GRect label_rect = GRect(0, center_y - 45, bounds.size.w, 24);
-    graphics_context_set_text_color(ctx, COLOR_FUZZY_LABEL);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, "time left", label_font, label_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
@@ -1104,7 +1105,7 @@ void display_draw_fuzzy(GContext *ctx, GRect bounds, const DisplayContext *dctx)
     for (int i = 0; i < num_dots; i++) {
         int x = start_x + i * dot_spacing;
         if (i < filled_dots) {
-            graphics_context_set_fill_color(ctx, COLOR_FUZZY_TEXT);
+            graphics_context_set_fill_color(ctx, c->secondary);
             graphics_fill_circle(ctx, GPoint(x, dot_y), 4);
         } else {
             graphics_context_set_stroke_color(ctx, COLOR_HINT);
