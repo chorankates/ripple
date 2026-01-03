@@ -882,7 +882,7 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
     // "elapsed" label
     GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
     GRect label_rect = GRect(0, center_y - 55, bounds.size.w, 20);
-    graphics_context_set_text_color(ctx, c->secondary);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, "elapsed", label_font, label_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
@@ -893,7 +893,7 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
     int bar_width = bounds.size.w - bar_margin * 2;
     
     // Background bar
-    graphics_context_set_fill_color(ctx, c->secondary);
+    graphics_context_set_fill_color(ctx, c->primary);
     graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
     
     // Filled portion (elapsed)
@@ -941,7 +941,7 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
     // "remaining" label
     GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
     GRect label_rect = GRect(0, center_y - 55, bounds.size.w, 20);
-    graphics_context_set_text_color(ctx, c->secondary);
+    graphics_context_set_text_color(ctx, c->primary);
     graphics_draw_text(ctx, "remaining", label_font, label_rect,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     
@@ -952,7 +952,7 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
     int bar_width = bounds.size.w - bar_margin * 2;
     
     // Background bar
-    graphics_context_set_fill_color(ctx, c->secondary);
+    graphics_context_set_fill_color(ctx, c->primary);
     graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
     
     // Filled portion (remaining)
