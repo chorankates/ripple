@@ -16,12 +16,20 @@ Resolved 45 packages in 11.45s
   ├─▶ The build backend returned an error
   ╰─▶ Call to `setuptools.build_meta:__legacy__.build_wheel` failed (exit status: 1)
 ...
+          exec(code, locals())
+        File "<string>", line 12, in <module>
+      ModuleNotFoundError: No module named 'settings'
+...
 or `uv pip install settings` into the environment and re-run with `--no-build-isolation`.
   help: `stpyv8` (v13.1.201.22) was included because `pebble-tool` (v5.0.13) depends on `pypkjs` (v2.0.6)
         which depends on `stpyv8`
 ```
 
 considered arch because of this [unanswered reddit post](https://www.reddit.com/r/pebble/comments/1ozqaec/sdk_installation_troubles_on_macos/), which describes the same problem
+
+coming back to this, trying to build stpyv8 from source, notice [settings.py](https://github.com/cloudflare/stpyv8/blob/master/settings.py), which is almost certainly the 'settings' module that can't be found, so it's just another pathing problem. 
+ 
+
 
 but if you can overcome that..
 
@@ -55,7 +63,14 @@ all of them all of them
 make screenshot-matrix
 ```
 
+### potential issues
+
+  * `qemu` screenshotting integration doesn't have a lot of error checking - if running remotely, and stalling on the first shot "Installing app..", check your environment variables
+  * `qemu` screenshotting steals focus, best to leave it alone during the ~5 minutes it takes to run `make screenshot-matrix`
+  * don't forget to add your new mode to `DISPLAY_MODES` in [Makefile](Makefile)
 
 ## platforms
 
 currently supporting all platforms, need to think more about the tradeoffs of only supporting newer physical devices
+
+

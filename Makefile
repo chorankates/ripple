@@ -75,7 +75,7 @@ PLATFORMS = aplite basalt chalk diorite emery
 # Index corresponds to number of long-presses needed from default TEXT mode
 DISPLAY_MODES = text blocks vertical_blocks clock ring hourglass binary \
                 radial hex matrix water_level spiral_out spiral_in \
-                percent percent_remaining
+                percent percent_remaining fuzzy
 
 # Timing settings (adjust if needed for slower systems)
 INSTALL_DELAY = 5

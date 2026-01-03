@@ -44,6 +44,7 @@ typedef enum {
     DISPLAY_MODE_SPIRAL_IN,
     DISPLAY_MODE_PERCENT,
     DISPLAY_MODE_PERCENT_REMAINING,
+    DISPLAY_MODE_FUZZY,
     DISPLAY_MODE_COUNT  // Used for cycling
 } DisplayMode;
 
