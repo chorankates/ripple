@@ -456,10 +456,16 @@ static void update_display(void) {
     static char time_buf[16];
     static char hint_buf[64];
     
-    VisualizationColors current_colors = s_settings.visualization_colors[s_timer_ctx.display_mode];
-    window_set_background_color(s_main_window, current_colors.background);
-    
     bool show_canvas = timer_should_show_canvas(&s_timer_ctx);
+    
+    // Use visualization background only when canvas is showing;
+    // otherwise use black so white text remains visible
+    if (show_canvas) {
+        VisualizationColors current_colors = s_settings.visualization_colors[s_timer_ctx.display_mode];
+        window_set_background_color(s_main_window, current_colors.background);
+    } else {
+        window_set_background_color(s_main_window, GColorBlack);
+    }
     
     layer_set_hidden(s_canvas_layer, !show_canvas);
     layer_set_hidden(text_layer_get_layer(s_time_layer), show_canvas);
