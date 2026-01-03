@@ -27,6 +27,13 @@ static TimerSettings s_settings;
 static AnimationState s_anim_state;
 static AppTimer *s_vibrate_timer = NULL;
 
+// Visualization settings UI
+static Window *s_visual_menu_window = NULL;
+static MenuLayer *s_visual_menu_layer = NULL;
+static Window *s_visual_detail_window = NULL;
+static MenuLayer *s_visual_detail_menu = NULL;
+static DisplayMode s_selected_visual_mode = DISPLAY_MODE_TEXT;
+
 // =============================================================================
 // Forward Declarations
 // =============================================================================
@@ -34,34 +41,14 @@ static AppTimer *s_vibrate_timer = NULL;
 static void update_display(void);
 static void apply_effects(TimerEffects effects);
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed);
+static void open_visual_settings_menu(void);
 
 // =============================================================================
 // Settings Persistence
 // =============================================================================
 
 static void settings_load(void) {
-    // Initialize with defaults
-    settings_init_defaults(&s_settings);
-    
-    // Check if we have saved settings
-    if (persist_exists(SETTINGS_KEY_VERSION)) {
-        int version = persist_read_int(SETTINGS_KEY_VERSION);
-        if (version == SETTINGS_VERSION) {
-            // Load saved settings
-            if (persist_exists(SETTINGS_KEY_DISPLAY_MODE)) {
-                s_settings.default_display_mode = persist_read_int(SETTINGS_KEY_DISPLAY_MODE);
-            }
-            if (persist_exists(SETTINGS_KEY_DEFAULT_TIME)) {
-                s_settings.default_preset_index = persist_read_int(SETTINGS_KEY_DEFAULT_TIME);
-            }
-            if (persist_exists(SETTINGS_KEY_HIDE_TIME)) {
-                s_settings.hide_time_text = persist_read_bool(SETTINGS_KEY_HIDE_TIME);
-            }
-        }
-    }
-    
-    // Validate loaded settings
-    settings_validate(&s_settings);
+    settings_persist_load(&s_settings);
 }
 
 static void settings_save(void) {
@@ -69,10 +56,306 @@ static void settings_save(void) {
     settings_update_from_context(&s_settings, &s_timer_ctx);
     
     // Write to persistent storage
-    persist_write_int(SETTINGS_KEY_VERSION, SETTINGS_VERSION);
-    persist_write_int(SETTINGS_KEY_DISPLAY_MODE, s_settings.default_display_mode);
-    persist_write_int(SETTINGS_KEY_DEFAULT_TIME, s_settings.default_preset_index);
-    persist_write_bool(SETTINGS_KEY_HIDE_TIME, s_settings.hide_time_text);
+    settings_persist_save(&s_settings);
+}
+
+// =============================================================================
+// Visualization Settings Helpers
+// =============================================================================
+
+#ifdef PBL_COLOR
+  #define COLOR_OPTION_COUNT 13
+#else
+  #define COLOR_OPTION_COUNT 2
+#endif
+
+static GColor s_color_options[COLOR_OPTION_COUNT];
+static const char *s_color_names[COLOR_OPTION_COUNT] = {
+    #ifdef PBL_COLOR
+        "White", "Light Gray", "Dark Gray", "Red", "Orange",
+        "Yellow", "Green", "Bright Green", "Cyan",
+        "Cerulean", "Blue", "Violet", "Magenta"
+    #else
+        "White", "Black"
+    #endif
+};
+
+static bool s_color_options_initialized = false;
+static void ensure_color_options(void) {
+    if (s_color_options_initialized) return;
+    s_color_options_initialized = true;
+    #ifdef PBL_COLOR
+        s_color_options[0] = GColorWhite;
+        s_color_options[1] = GColorLightGray;
+        s_color_options[2] = GColorDarkGray;
+        s_color_options[3] = GColorRed;
+        s_color_options[4] = GColorOrange;
+        s_color_options[5] = GColorChromeYellow;
+        s_color_options[6] = GColorGreen;
+        s_color_options[7] = GColorBrightGreen;
+        s_color_options[8] = GColorCyan;
+        s_color_options[9] = GColorVividCerulean;
+        s_color_options[10] = GColorBlue;
+        s_color_options[11] = GColorVividViolet;
+        s_color_options[12] = GColorMagenta;
+    #else
+        s_color_options[0] = GColorWhite;
+        s_color_options[1] = GColorBlack;
+    #endif
+}
+
+static const int s_color_option_count = COLOR_OPTION_COUNT;
+
+static int color_index_for(GColor color) {
+    ensure_color_options();
+    for (int i = 0; i < s_color_option_count; i++) {
+        if (gcolor_equal(color, s_color_options[i])) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+static GColor color_next(GColor color) {
+    ensure_color_options();
+    int idx = color_index_for(color);
+    idx = (idx + 1) % s_color_option_count;
+    return s_color_options[idx];
+}
+
+static const char* color_name_for(GColor color) {
+    ensure_color_options();
+    return s_color_names[color_index_for(color)];
+}
+
+static void refresh_visualization_menus(void) {
+    if (s_visual_menu_layer) {
+        menu_layer_reload_data(s_visual_menu_layer);
+    }
+    if (s_visual_detail_menu) {
+        menu_layer_reload_data(s_visual_detail_menu);
+    }
+}
+
+static void apply_visual_preferences(void) {
+    settings_validate(&s_settings);
+    for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+        s_timer_ctx.display_mode_enabled[i] = s_settings.visualization_enabled[i];
+    }
+    
+    if (!s_timer_ctx.display_mode_enabled[s_timer_ctx.display_mode]) {
+        s_timer_ctx.display_mode = s_settings.default_display_mode;
+    }
+    
+    if (s_main_window) {
+        window_set_background_color(
+            s_main_window,
+            s_settings.visualization_colors[s_timer_ctx.display_mode].background);
+    }
+    
+    update_display();
+}
+
+static void toggle_visualization_enabled(DisplayMode mode) {
+    s_settings.visualization_enabled[mode] = !s_settings.visualization_enabled[mode];
+    apply_visual_preferences();
+    settings_persist_save(&s_settings);
+    refresh_visualization_menus();
+}
+
+static void set_visualization_default(DisplayMode mode) {
+    s_settings.default_display_mode = mode;
+    s_timer_ctx.display_mode = mode;
+    apply_visual_preferences();
+    settings_persist_save(&s_settings);
+    refresh_visualization_menus();
+}
+
+static void cycle_visualization_color(DisplayMode mode, GColor *target) {
+    *target = color_next(*target);
+    apply_visual_preferences();
+    settings_persist_save(&s_settings);
+    refresh_visualization_menus();
+}
+
+// =============================================================================
+// Visualization Settings UI
+// =============================================================================
+
+typedef enum {
+    DETAIL_ROW_ENABLED = 0,
+    DETAIL_ROW_PRIMARY,
+    DETAIL_ROW_SECONDARY,
+    DETAIL_ROW_ACCENT,
+    DETAIL_ROW_SET_DEFAULT,
+    DETAIL_ROW_COUNT
+} VisualizationDetailRow;
+
+static uint16_t visual_menu_get_num_sections(MenuLayer *menu_layer, void *data) {
+    return 1;
+}
+
+static uint16_t visual_menu_get_num_rows(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+    return DISPLAY_MODE_COUNT;
+}
+
+static void visual_menu_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
+    DisplayMode mode = (DisplayMode)cell_index->row;
+    const VisualizationColors *colors = &s_settings.visualization_colors[mode];
+    bool enabled = s_settings.visualization_enabled[mode];
+    
+    char subtitle[32];
+    snprintf(subtitle, sizeof(subtitle), "%s | %s", enabled ? "On" : "Off", color_name_for(colors->primary));
+    
+    menu_cell_basic_draw(ctx, cell_layer, timer_display_mode_name(mode), subtitle, NULL);
+}
+
+static void open_visual_detail_window(DisplayMode mode);
+
+static void visual_menu_select(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+    s_selected_visual_mode = (DisplayMode)cell_index->row;
+    open_visual_detail_window(s_selected_visual_mode);
+}
+
+static uint16_t visual_detail_get_num_sections(MenuLayer *menu_layer, void *data) {
+    return 1;
+}
+
+static uint16_t visual_detail_get_num_rows(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+    return DETAIL_ROW_COUNT;
+}
+
+static void visual_detail_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
+    VisualizationColors *colors = &s_settings.visualization_colors[s_selected_visual_mode];
+    const char *title = "";
+    const char *subtitle = "";
+    
+    switch (cell_index->row) {
+        case DETAIL_ROW_ENABLED:
+            title = "Enabled";
+            subtitle = s_settings.visualization_enabled[s_selected_visual_mode] ? "On" : "Off";
+            break;
+        case DETAIL_ROW_PRIMARY:
+            title = "Primary color";
+            subtitle = color_name_for(colors->primary);
+            break;
+        case DETAIL_ROW_SECONDARY:
+            title = "Secondary color";
+            subtitle = color_name_for(colors->secondary);
+            break;
+        case DETAIL_ROW_ACCENT:
+            title = "Accent color";
+            subtitle = color_name_for(colors->accent);
+            break;
+        case DETAIL_ROW_SET_DEFAULT:
+            title = "Set as default";
+            subtitle = (s_settings.default_display_mode == s_selected_visual_mode) ? "Current default" : "Tap to set";
+            break;
+        default:
+            break;
+    }
+    
+    menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
+}
+
+static void visual_detail_select(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+    VisualizationColors *colors = &s_settings.visualization_colors[s_selected_visual_mode];
+    
+    switch (cell_index->row) {
+        case DETAIL_ROW_ENABLED:
+            toggle_visualization_enabled(s_selected_visual_mode);
+            break;
+        case DETAIL_ROW_PRIMARY:
+            cycle_visualization_color(s_selected_visual_mode, &colors->primary);
+            break;
+        case DETAIL_ROW_SECONDARY:
+            cycle_visualization_color(s_selected_visual_mode, &colors->secondary);
+            break;
+        case DETAIL_ROW_ACCENT:
+            cycle_visualization_color(s_selected_visual_mode, &colors->accent);
+            break;
+        case DETAIL_ROW_SET_DEFAULT:
+            set_visualization_default(s_selected_visual_mode);
+            break;
+    }
+}
+
+static void visual_menu_window_load(Window *window) {
+    Layer *window_layer = window_get_root_layer(window);
+    GRect bounds = layer_get_bounds(window_layer);
+    
+    s_visual_menu_layer = menu_layer_create(bounds);
+    menu_layer_set_callbacks(s_visual_menu_layer, NULL, (MenuLayerCallbacks) {
+        .get_num_sections = visual_menu_get_num_sections,
+        .get_num_rows = visual_menu_get_num_rows,
+        .draw_row = visual_menu_draw_row,
+        .select_click = visual_menu_select
+    });
+    menu_layer_set_click_config_onto_window(s_visual_menu_layer, window);
+    layer_add_child(window_layer, menu_layer_get_layer(s_visual_menu_layer));
+}
+
+static void visual_menu_window_unload(Window *window) {
+    if (s_visual_menu_layer) {
+        menu_layer_destroy(s_visual_menu_layer);
+        s_visual_menu_layer = NULL;
+    }
+}
+
+static void visual_detail_window_load(Window *window) {
+    Layer *window_layer = window_get_root_layer(window);
+    GRect bounds = layer_get_bounds(window_layer);
+    
+    s_visual_detail_menu = menu_layer_create(bounds);
+    menu_layer_set_callbacks(s_visual_detail_menu, NULL, (MenuLayerCallbacks) {
+        .get_num_sections = visual_detail_get_num_sections,
+        .get_num_rows = visual_detail_get_num_rows,
+        .draw_row = visual_detail_draw_row,
+        .select_click = visual_detail_select
+    });
+    menu_layer_set_click_config_onto_window(s_visual_detail_menu, window);
+    layer_add_child(window_layer, menu_layer_get_layer(s_visual_detail_menu));
+}
+
+static void visual_detail_window_unload(Window *window) {
+    if (s_visual_detail_menu) {
+        menu_layer_destroy(s_visual_detail_menu);
+        s_visual_detail_menu = NULL;
+    }
+}
+
+static void open_visual_detail_window(DisplayMode mode) {
+    s_selected_visual_mode = mode;
+    
+    if (!s_visual_detail_window) {
+        s_visual_detail_window = window_create();
+        window_set_window_handlers(s_visual_detail_window, (WindowHandlers) {
+            .load = visual_detail_window_load,
+            .unload = visual_detail_window_unload
+        });
+    }
+    
+    if (s_visual_detail_menu) {
+        menu_layer_reload_data(s_visual_detail_menu);
+    }
+    
+    window_stack_push(s_visual_detail_window, true);
+}
+
+static void open_visual_settings_menu(void) {
+    if (!s_visual_menu_window) {
+        s_visual_menu_window = window_create();
+        window_set_window_handlers(s_visual_menu_window, (WindowHandlers) {
+            .load = visual_menu_window_load,
+            .unload = visual_menu_window_unload
+        });
+    }
+    
+    if (s_visual_menu_layer) {
+        menu_layer_reload_data(s_visual_menu_layer);
+    }
+    
+    window_stack_push(s_visual_menu_window, true);
 }
 
 // =============================================================================
@@ -161,7 +444,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
         return;
     }
     
-    display_draw(ctx, bounds, &s_timer_ctx, &s_anim_state);
+    display_draw(ctx, bounds, &s_timer_ctx, &s_anim_state, s_settings.visualization_colors);
 }
 
 // =============================================================================
@@ -173,7 +456,8 @@ static void update_display(void) {
     static char time_buf[16];
     static char hint_buf[64];
     
-    window_set_background_color(s_main_window, COLOR_BACKGROUND);
+    VisualizationColors current_colors = s_settings.visualization_colors[s_timer_ctx.display_mode];
+    window_set_background_color(s_main_window, current_colors.background);
     
     bool show_canvas = timer_should_show_canvas(&s_timer_ctx);
     
@@ -279,6 +563,13 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     apply_effects(effects);
 }
 
+static void down_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (s_timer_ctx.state == STATE_SELECT_PRESET ||
+        s_timer_ctx.state == STATE_PAUSED) {
+        open_visual_settings_menu();
+    }
+}
+
 static void back_click_handler(ClickRecognizerRef recognizer, void *context) {
     TimerEffects effects = timer_handle_back(&s_timer_ctx);
     apply_effects(effects);
@@ -291,6 +582,7 @@ static void click_config_provider(void *context) {
     window_single_click_subscribe(BUTTON_ID_BACK, back_click_handler);
     window_long_click_subscribe(BUTTON_ID_SELECT, 500, select_long_click_handler, NULL);
     window_long_click_subscribe(BUTTON_ID_UP, 500, up_long_click_handler, NULL);
+    window_long_click_subscribe(BUTTON_ID_DOWN, 500, down_long_click_handler, NULL);
 }
 
 // =============================================================================
@@ -380,7 +672,7 @@ static void init(void) {
         .unload = window_unload,
     });
     
-    window_set_background_color(s_main_window, COLOR_BACKGROUND);
+    window_set_background_color(s_main_window, s_settings.visualization_colors[s_timer_ctx.display_mode].background);
     window_stack_push(s_main_window, true);
 }
 
@@ -391,6 +683,13 @@ static void deinit(void) {
     stop_vibration_loop();
     tick_timer_service_unsubscribe();
     window_destroy(s_main_window);
+    
+    if (s_visual_detail_window) {
+        window_destroy(s_visual_detail_window);
+    }
+    if (s_visual_menu_window) {
+        window_destroy(s_visual_menu_window);
+    }
 }
 
 int main(void) {

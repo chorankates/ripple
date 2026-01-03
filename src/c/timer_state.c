@@ -7,6 +7,11 @@
 void timer_context_init(TimerContext *ctx) {
     ctx->state = STATE_SELECT_PRESET;
     ctx->display_mode = DISPLAY_MODE_TEXT;
+    
+    for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+        ctx->display_mode_enabled[i] = true;
+    }
+    
     ctx->remaining_seconds = 0;
     ctx->total_seconds = 0;
     ctx->selected_preset = 0;
@@ -173,7 +178,30 @@ TimerEffects timer_dismiss_completion(TimerContext *ctx) {
 TimerEffects timer_cycle_display_mode(TimerContext *ctx) {
     TimerEffects effects = timer_effects_none();
     
-    ctx->display_mode = (ctx->display_mode + 1) % DISPLAY_MODE_COUNT;
+    // If the enabled mask is empty (e.g., uninitialized), treat all as enabled
+    bool any_enabled = false;
+    for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+        if (ctx->display_mode_enabled[i]) {
+            any_enabled = true;
+            break;
+        }
+    }
+    if (!any_enabled) {
+        for (int i = 0; i < DISPLAY_MODE_COUNT; i++) {
+            ctx->display_mode_enabled[i] = true;
+        }
+        any_enabled = true;
+    }
+    
+    // Find the next enabled mode (skip the current one)
+    DisplayMode next_mode = ctx->display_mode;
+    for (int step = 0; step < DISPLAY_MODE_COUNT; step++) {
+        next_mode = (next_mode + 1) % DISPLAY_MODE_COUNT;
+        if (ctx->display_mode_enabled[next_mode]) {
+            break;
+        }
+    }
+    ctx->display_mode = next_mode;
     
     effects.vibrate_short = true;
     effects.update_display = true;
