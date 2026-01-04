@@ -1021,6 +1021,134 @@ void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *d
 }
 
 // =============================================================================
+// Snake Mode
+// =============================================================================
+
+#define SNAKE_PADDING 2
+
+// Simple pseudo-random number generator for path variation
+static uint32_t snake_rand(uint32_t *seed) {
+    *seed = *seed * 1103515245 + 12345;
+    return (*seed >> 16) & 0x7FFF;
+}
+
+void animation_init_snake(SnakeState *state, int seed) {
+    uint32_t rng = (uint32_t)seed;
+    
+    // Start with a basic zigzag/snake pattern
+    // This guarantees a valid connected path visiting all cells
+    int idx = 0;
+    for (int row = 0; row < SNAKE_ROWS; row++) {
+        if (row % 2 == 0) {
+            // Left to right
+            for (int col = 0; col < SNAKE_COLS; col++) {
+                state->path[idx++] = row * SNAKE_COLS + col;
+            }
+        } else {
+            // Right to left
+            for (int col = SNAKE_COLS - 1; col >= 0; col--) {
+                state->path[idx++] = row * SNAKE_COLS + col;
+            }
+        }
+    }
+    
+    // Randomize starting point by rotating the path
+    int rotation = snake_rand(&rng) % SNAKE_TOTAL_CELLS;
+    if (rotation > 0) {
+        // Rotate path by 'rotation' positions
+        uint8_t temp[SNAKE_TOTAL_CELLS];
+        for (int i = 0; i < SNAKE_TOTAL_CELLS; i++) {
+            temp[i] = state->path[(i + rotation) % SNAKE_TOTAL_CELLS];
+        }
+        for (int i = 0; i < SNAKE_TOTAL_CELLS; i++) {
+            state->path[i] = temp[i];
+        }
+    }
+    
+    // Apply some random segment reversals to add variety
+    // This maintains connectivity while changing the visual pattern
+    int num_reversals = 3 + (snake_rand(&rng) % 5);
+    for (int r = 0; r < num_reversals; r++) {
+        int start = snake_rand(&rng) % (SNAKE_TOTAL_CELLS - 4);
+        int len = 4 + (snake_rand(&rng) % 8);
+        if (start + len > SNAKE_TOTAL_CELLS) {
+            len = SNAKE_TOTAL_CELLS - start;
+        }
+        
+        // Reverse segment [start, start+len)
+        for (int i = 0; i < len / 2; i++) {
+            uint8_t tmp = state->path[start + i];
+            state->path[start + i] = state->path[start + len - 1 - i];
+            state->path[start + len - 1 - i] = tmp;
+        }
+    }
+}
+
+void display_draw_snake(GContext *ctx, GRect bounds, const DisplayContext *dctx, const SnakeState *snake) {
+    const VisualizationColors *c = dctx->colors;
+    int available_width = bounds.size.w - 20;
+    int available_height = bounds.size.h - 60;
+    
+    int block_width = (available_width - (SNAKE_COLS - 1) * SNAKE_PADDING) / SNAKE_COLS;
+    int block_height = (available_height - (SNAKE_ROWS - 1) * SNAKE_PADDING) / SNAKE_ROWS;
+    int block_size = (block_width < block_height) ? block_width : block_height;
+    
+    int grid_width = SNAKE_COLS * block_size + (SNAKE_COLS - 1) * SNAKE_PADDING;
+    int grid_height = SNAKE_ROWS * block_size + (SNAKE_ROWS - 1) * SNAKE_PADDING;
+    int start_x = (bounds.size.w - grid_width) / 2;
+    int start_y = (bounds.size.h - grid_height) / 2 - 10;
+    
+    int total_blocks = SNAKE_TOTAL_CELLS;
+    int filled_blocks = progress_calculate_blocks(dctx->remaining_seconds, dctx->total_seconds, total_blocks);
+    
+    // Create a lookup: for each cell, what's its fill order?
+    // cell_order[cell_index] = position in snake path (0 = first filled)
+    int cell_order[SNAKE_TOTAL_CELLS];
+    for (int i = 0; i < SNAKE_TOTAL_CELLS; i++) {
+        cell_order[snake->path[i]] = i;
+    }
+    
+    // Draw all blocks
+    for (int row = 0; row < SNAKE_ROWS; row++) {
+        for (int col = 0; col < SNAKE_COLS; col++) {
+            int cell_idx = row * SNAKE_COLS + col;
+            int x = start_x + col * (block_size + SNAKE_PADDING);
+            int y = start_y + row * (block_size + SNAKE_PADDING);
+            GRect block_rect = GRect(x, y, block_size, block_size);
+            
+            // Check if this cell should be filled
+            int order = cell_order[cell_idx];
+            if (order < filled_blocks) {
+                graphics_context_set_fill_color(ctx, c->primary);
+                graphics_fill_rect(ctx, block_rect, 2, GCornersAll);
+            } else {
+                // Draw outline for unfilled blocks
+                graphics_context_set_stroke_color(ctx, c->secondary);
+                graphics_draw_round_rect(ctx, block_rect, 2);
+            }
+        }
+    }
+    
+    // Draw snake "head" indicator at the frontier
+    if (filled_blocks > 0 && filled_blocks < total_blocks) {
+        int head_cell = snake->path[filled_blocks - 1];
+        int head_row = head_cell / SNAKE_COLS;
+        int head_col = head_cell % SNAKE_COLS;
+        int hx = start_x + head_col * (block_size + SNAKE_PADDING) + block_size / 2;
+        int hy = start_y + head_row * (block_size + SNAKE_PADDING) + block_size / 2;
+        
+        graphics_context_set_fill_color(ctx, c->accent);
+        graphics_fill_circle(ctx, GPoint(hx, hy), block_size / 4);
+    }
+    
+    if (!dctx->hide_time_text) {
+        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+        GRect text_rect = GRect(0, start_y + grid_height + 5, bounds.size.w, 30);
+        draw_time_text(ctx, dctx->remaining_seconds, text_rect, font);
+    }
+}
+
+// =============================================================================
 // Master Draw Function
 // =============================================================================
 
@@ -1080,6 +1208,9 @@ void display_draw(GContext *ctx, GRect bounds, const TimerContext *timer, Animat
             break;
         case DISPLAY_MODE_PERCENT_REMAINING:
             display_draw_percent_remaining(ctx, bounds, &dctx);
+            break;
+        case DISPLAY_MODE_SNAKE:
+            display_draw_snake(ctx, bounds, &dctx, &anim->snake);
             break;
         default:
             break;

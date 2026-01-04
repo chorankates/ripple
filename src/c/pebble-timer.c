@@ -395,6 +395,10 @@ static void apply_effects(TimerEffects effects) {
         animation_init_matrix(&s_anim_state.matrix, s_timer_ctx.remaining_seconds);
     }
     
+    if (effects.init_snake) {
+        animation_init_snake(&s_anim_state.snake, s_timer_ctx.remaining_seconds);
+    }
+    
     if (effects.subscribe_tick_timer) {
         tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
     }

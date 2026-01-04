@@ -44,6 +44,7 @@ typedef enum {
     DISPLAY_MODE_SPIRAL_IN,
     DISPLAY_MODE_PERCENT,
     DISPLAY_MODE_PERCENT_REMAINING,
+    DISPLAY_MODE_SNAKE,
     DISPLAY_MODE_COUNT  // Used for cycling
 } DisplayMode;
 
@@ -86,6 +87,7 @@ typedef struct {
     bool stop_vibration;
     bool init_hourglass;
     bool init_matrix;
+    bool init_snake;
     bool vibrate_short;
     bool pop_window;
 } TimerEffects;

@@ -28,6 +28,7 @@ void colors_load_default_palettes(VisualizationColors palettes[DISPLAY_MODE_COUN
         palettes[DISPLAY_MODE_SPIRAL_IN]       = make_palette(bg, GColorMagenta, GColorDarkGray, GColorMagenta);
         palettes[DISPLAY_MODE_PERCENT]         = make_palette(bg, GColorChromeYellow, GColorDarkGray, GColorChromeYellow);
         palettes[DISPLAY_MODE_PERCENT_REMAINING] = make_palette(bg, GColorChromeYellow, GColorDarkGray, GColorChromeYellow);
+        palettes[DISPLAY_MODE_SNAKE]           = make_palette(bg, GColorMayGreen, GColorDarkGray, GColorWhite);
     #else
         // Monochrome defaults
         const GColor bg = GColorBlack;
@@ -48,6 +49,7 @@ void colors_load_default_palettes(VisualizationColors palettes[DISPLAY_MODE_COUN
         palettes[DISPLAY_MODE_SPIRAL_IN]       = make_palette(bg, primary, secondary, primary);
         palettes[DISPLAY_MODE_PERCENT]         = make_palette(bg, primary, secondary, primary);
         palettes[DISPLAY_MODE_PERCENT_REMAINING] = make_palette(bg, primary, secondary, primary);
+        palettes[DISPLAY_MODE_SNAKE]           = make_palette(bg, primary, secondary, primary);
     #endif
 }
 

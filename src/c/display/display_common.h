@@ -53,12 +53,26 @@ typedef struct {
 } MatrixState;
 
 // =============================================================================
+// Snake Path Animation State
+// =============================================================================
+
+#define SNAKE_COLS 10
+#define SNAKE_ROWS 8
+#define SNAKE_TOTAL_CELLS (SNAKE_COLS * SNAKE_ROWS)
+
+typedef struct {
+    // path[i] = cell index (row * SNAKE_COLS + col) for the i-th step of the snake
+    uint8_t path[SNAKE_TOTAL_CELLS];
+} SnakeState;
+
+// =============================================================================
 // Animation State Container
 // =============================================================================
 
 typedef struct {
     HourglassState hourglass;
     MatrixState matrix;
+    SnakeState snake;
 } AnimationState;
 
 // =============================================================================
@@ -67,6 +81,7 @@ typedef struct {
 
 void animation_init_hourglass(HourglassState *state);
 void animation_init_matrix(MatrixState *state, int seed);
+void animation_init_snake(SnakeState *state, int seed);
 
 // =============================================================================
 // Animation Updates
@@ -93,6 +108,7 @@ void display_draw_spiral_out(GContext *ctx, GRect bounds, const DisplayContext *
 void display_draw_spiral_in(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dctx);
 void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayContext *dctx);
+void display_draw_snake(GContext *ctx, GRect bounds, const DisplayContext *dctx, const SnakeState *snake);
 
 // =============================================================================
 // Master Draw Function

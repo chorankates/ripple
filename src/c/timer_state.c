@@ -29,6 +29,7 @@ TimerEffects timer_effects_none(void) {
         .stop_vibration = false,
         .init_hourglass = false,
         .init_matrix = false,
+        .init_snake = false,
         .vibrate_short = false,
         .pop_window = false
     };
@@ -56,6 +57,7 @@ const char* timer_display_mode_name(DisplayMode mode) {
         case DISPLAY_MODE_SPIRAL_IN:       return "Spiral In";
         case DISPLAY_MODE_PERCENT:         return "% Elapsed";
         case DISPLAY_MODE_PERCENT_REMAINING: return "% Remaining";
+        case DISPLAY_MODE_SNAKE:           return "Snake";
         default:                           return "Text";
     }
 }
@@ -88,6 +90,7 @@ TimerEffects timer_start(TimerContext *ctx, int minutes) {
     effects.update_display = true;
     effects.init_hourglass = true;
     effects.init_matrix = true;
+    effects.init_snake = true;
     
     return effects;
 }
@@ -159,6 +162,7 @@ TimerEffects timer_restart(TimerContext *ctx) {
     effects.update_display = true;
     effects.init_hourglass = true;
     effects.init_matrix = true;
+    effects.init_snake = true;
     
     return effects;
 }
