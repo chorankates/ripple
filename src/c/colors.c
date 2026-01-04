@@ -37,7 +37,7 @@ void colors_load_default_palettes(VisualizationColors palettes[DISPLAY_MODE_COUN
         palettes[DISPLAY_MODE_BLOCKS]          = make_palette(bg, primary, secondary, primary);
         palettes[DISPLAY_MODE_VERTICAL_BLOCKS] = make_palette(bg, primary, secondary, primary);
         palettes[DISPLAY_MODE_CLOCK]           = make_palette(bg, primary, primary, primary);
-        palettes[DISPLAY_MODE_RING]            = make_palette(bg, primary, secondary, primary);
+        palettes[DISPLAY_MODE_RING]            = make_palette(bg, primary, primary, primary);
         palettes[DISPLAY_MODE_HOURGLASS]       = make_palette(bg, primary, primary, primary);
         palettes[DISPLAY_MODE_BINARY]          = make_palette(bg, primary, secondary, primary);
         palettes[DISPLAY_MODE_RADIAL]          = make_palette(bg, primary, primary, primary);
@@ -46,8 +46,8 @@ void colors_load_default_palettes(VisualizationColors palettes[DISPLAY_MODE_COUN
         palettes[DISPLAY_MODE_WATER_LEVEL]     = make_palette(bg, primary, primary, primary);
         palettes[DISPLAY_MODE_SPIRAL_OUT]      = make_palette(bg, primary, secondary, primary);
         palettes[DISPLAY_MODE_SPIRAL_IN]       = make_palette(bg, primary, secondary, primary);
-        palettes[DISPLAY_MODE_PERCENT]         = make_palette(bg, primary, primary, primary);
-        palettes[DISPLAY_MODE_PERCENT_REMAINING] = make_palette(bg, primary, primary, primary);
+        palettes[DISPLAY_MODE_PERCENT]         = make_palette(bg, primary, secondary, primary);
+        palettes[DISPLAY_MODE_PERCENT_REMAINING] = make_palette(bg, primary, secondary, primary);
     #endif
 }
 
