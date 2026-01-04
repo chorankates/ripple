@@ -16,7 +16,7 @@ TEST_BIN = build/tests/test_runner
 # Default target
 all: build
 
-build:
+build: clean
 	pebble build
 
 clean:

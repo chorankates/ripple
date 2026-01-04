@@ -893,7 +893,7 @@ void display_draw_percent(GContext *ctx, GRect bounds, const DisplayContext *dct
     int bar_width = bounds.size.w - bar_margin * 2;
     
     // Background bar
-    graphics_context_set_fill_color(ctx, c->primary);
+    graphics_context_set_fill_color(ctx, c->secondary);
     graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
     
     // Filled portion (elapsed)
@@ -952,7 +952,7 @@ void display_draw_percent_remaining(GContext *ctx, GRect bounds, const DisplayCo
     int bar_width = bounds.size.w - bar_margin * 2;
     
     // Background bar
-    graphics_context_set_fill_color(ctx, c->primary);
+    graphics_context_set_fill_color(ctx, c->secondary);
     graphics_fill_rect(ctx, GRect(bar_margin, bar_y, bar_width, bar_height), 4, GCornersAll);
     
     // Filled portion (remaining)

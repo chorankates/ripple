@@ -23,7 +23,7 @@
 #define SETTINGS_KEY_HIDE_TIME     0x1004  // Legacy v1
 
 // Current settings version (increment when structure changes)
-#define SETTINGS_VERSION 2
+#define SETTINGS_VERSION 4
 
 // =============================================================================
 // Settings Structure
